@@ -2,11 +2,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+void* xmalloc(size_t size)
+{
+    void* ptr = malloc(size);
+    if(ptr == NULL)
+        exit(1);
+    return ptr;
+}
+void* xcalloc(size_t cnt, size_t size)
+{
+    void* ptr = calloc(cnt, size);
+    if(ptr == NULL)
+        exit(1);
+    return ptr;
+}
 hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*hash) (const void* k)) 
 {
     hash_table* table;
-    table = malloc(sizeof(hash_table));
-    table->entries = calloc(TABLE_INIT_SIZE, sizeof(hash_entry*)); // TODO: Optimize since power of 2
+    table = xmalloc(sizeof(hash_table));
+    table->entries = xcalloc(TABLE_INIT_SIZE, sizeof(hash_entry*)); // TODO: Optimize since power of 2
     table->sz = TABLE_INIT_SIZE;
     table->inserted = 0; 
     table->compare = comp;
@@ -18,7 +33,7 @@ hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*h
 hash_entry* new_hash_entry(void* key, void* val) 
 {
     hash_entry* e;
-    e = malloc(sizeof(hash_entry));
+    e = xmalloc(sizeof(hash_entry));
     e->key = key;
     e->val = val;
     e->next = NULL;
@@ -87,20 +102,13 @@ void grow(hash_table* table)
     old_entries = table->entries;
     old_sz = table->sz;
     table->sz = (table->sz << 1); // table size = 2 * old table size;
-    table->entries = calloc(table->sz, sizeof(hash_entry*));
+    table->entries = xcalloc(table->sz, sizeof(hash_entry*));
 
     for (i = 0; i < old_sz; ++i) {
-        hash_entry* t = old_entries[i];
-        hash_entry* n;
-
-        // TODO: This can be optimized since we technically only need a pointer from one place to another
-        // This will avoid unnessecary mallocs and frees.
-        while (t != NULL) {
-            insert(table, t->key, t->val);
-            table->inserted--;
-            n = t;
-            t = t->next;
-            free(n);
+        size_t index;
+        if (old_entries[i] != NULL) {
+            index = table->hash(old_entries[i]->key) & (table->sz - 1);
+            table->entries[index] = old_entries[i];
         }
     }
     free(old_entries);

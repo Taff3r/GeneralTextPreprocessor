@@ -1,0 +1,5 @@
+vgcore.*
+*.out
+mdpp
+test_*
+*/*.o

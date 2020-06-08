@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <string.h>
-#include "hashmap.h"
+#include "../hashmap.h"
 #include <assert.h>
-#define INSERTS (500)
+#define INSERTS (999)
 size_t hash(const void* ptr)
 {
     size_t hash = 5381;
     int c;
     const char* str = (char*) ptr;
-    while (c = *str++)
+    while ((c = *str++) != '\0')
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
     return hash;
@@ -28,7 +28,7 @@ size_t ihash(const void* ptr)
     hash = hash ^ (hash>>10);
     hash = hash + (hash<<7);
     hash = hash ^ (hash>>13);
-    hash = hash - (hash >> 1);
+    //hash = hash - (hash >> 1);
     return hash;
 }
 
@@ -47,7 +47,7 @@ int main(void)
         char* s = malloc(sizeof(char) * 5);
         int* k = malloc(sizeof(int));
         *k = i;
-        snprintf(s, 4, "%d", i);
+        snprintf(s, 5, "%d", i);
         insert(t, s, k);
         assert(*k == *(int*)lookup(t, s));
     }
@@ -60,11 +60,15 @@ int main(void)
     hash_table* is = new_hash_table(icmp, ihash);
     for (i = 0; i < INSERTS; ++i) {
         char* s = malloc(sizeof(char) * 5);
+        if (s == NULL) {
+            printf("malloc returned NULL\n");
+            exit(1);
+        }
         int* k  = malloc(sizeof(int));
         *k = i;
-        snprintf(s, 4, "%d", i);
+        snprintf(s, 5, "%d", i);
         insert(is, k, s);
-        assert(strcmp(s, lookup(is, k)) == 0);
+        assert(strcmp(s, (char*)lookup(is, k)) == 0);
     }
 
 
