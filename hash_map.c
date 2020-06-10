@@ -2,21 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-void* xmalloc(size_t size)
-{
-    void* ptr = malloc(size);
-    if(ptr == NULL)
-        exit(1);
-    return ptr;
-}
-void* xcalloc(size_t cnt, size_t size)
-{
-    void* ptr = calloc(cnt, size);
-    if(ptr == NULL)
-        exit(1);
-    return ptr;
-}
+#include "util.h"
 hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*hash) (const void* k)) 
 {
     hash_table* table;
@@ -39,6 +25,9 @@ hash_entry* new_hash_entry(void* key, void* val)
     e->next = NULL;
     return e;
 }
+/*
+ * TODO: Add free policy for free'ing allocated memory inside eventual memory inside structs in keys/values.
+ */
 void delete_hash_table(hash_table* table)
 {
     int i;

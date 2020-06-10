@@ -1,0 +1,15 @@
+#ifndef PROCESS_FILE_H
+#define PROCESS_FILE_H
+#include <stdio.h>
+#include "hashmap.h"
+typedef struct macro_t macro_t;
+struct macro_t {
+    char* expansion;
+};
+size_t hash(const void* ptr);
+int cmp(const void* a, const void* b);
+void process(FILE*, FILE*);
+void write_line(hash_table*, const char*, FILE*);
+int add_macro(char*, hash_table*);
+
+#endif

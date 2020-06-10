@@ -1,0 +1,114 @@
+Projekt: Markdown Preprocessor
+av Simon Tenggren
+
+Bakgrund:
+Jag skriver väldigt mycket anteckningar i Markdown (https://en.wikipedia.org/wiki/Markdown), ett lättviktigt markup språk med stöd för kod-syntax, tabeller, etc. En funktion som jag saknar är möjligheten att definera macron för fraser eller ord som jag skriver väldigt ofta eller som är krångliga att skriva ut snabbt. Jag blev under senaste terminen väldigt inspererad av C-preprocssorn att definera macron för att "klistra in" text eller som funktioner. För de som inte är bekanta med C-preprocessor ser det ut i denna stilen:
+
+#include <stdio.h> // Inkludera en header fil
+#define NAME "Simon Tenggren" // Definera NAME som "Simon Tenggren"
+#define PRINTSTR(str) printf("%s\n", str) // Definera en funktion PRINTSTR som tar en sträng och printar den till stdout
+
+int main(void)
+{
+    PRINTSTR(NAME); // Printar "Simon Tenggren" till stdout
+    PRINTSTR("Hello There"); // Printar "Hello there" till stdout
+}
+
+I den tänkta Markdown Preprocessorn (mdpp) ska det vara möjligt att göra liknande kommandon i hela texten för att göra det enklare för användaren att skriva sin text snabbt och kunna återanvända text som man skriver väldigt ofta.
+Ett exempel på hur det skulle kunna se ut är följande (obs # är ett reserverat tecken i Markdown och kan på så sätt inte användas):
+
+$include "../commonlyused.mdpp" // Inkludera vanliga fraser (definerar NAME som används under)
+$define COURSECODE DVGB06 // definition
+$define COURSENAME Tillämpad Programmering // ...
+$function AUTHOR($n) Författaren till denna anteckningar är $n // definera en funktion
+
+Här är lite exempel text...
+$AUTHOR(NAME)
+Och jag läser kursen $COURSENAME ($COURSECODE)
+
+
+Vilket efter att att ha körts igenom mdpp bli följande markdown text (i en ny fil):
+
+Här är lite exempel text...
+Författaren till denna anteckningar är Simon Tenggren 
+Och jag läser kursen Tillämpad Programmering (DVGB06)
+
+
+Till skillnad från C är Markdown endast en datatyp (strings) vilket kommer göra det betydligt enklare än om man skulle skriva en preprocessor till ett programspråk och inte vara lika komplicerad då Cs preprocessor t.ex. har stöd som att ge exakt kälkodsrad som gav en output.
+
+Utveckling:
+Jag har valt att utveckla mdpp i C och användas i en UNIX miljö från en kommandotolk, först och främst för att detta programmet ska vara så snabbt som möjligt och inte vara jobbigt för användaren att använda, och att jag vill utveckla mina kunskaper och färdigheter inom C.
+
+Features:
+Följande features är sorterade och prioriterade för att en MVP av mdpp kommer att kunna utvecklas. 
+Följande funktioner behövs implementeras:
+1. Relevanta datastrukturer (en hash tabell kommer antagligen behövas, och då C inte har någon måste den skrivas av mig)
+2. Definitioner (t.ex. $define NAME Simon Tenggren).
+3. Funktioner (t.ex. $function AUTHOR($n) The authors name is $n).
+4. Inkludering av andra filer.
+5. Möjligheten att välja namn på sin output fil.
+6. Felhantering.
+7. Rekursiva macron (t.ex. $define FULLC $COURSENAME ($COURSECODE)).
+8. Rekursiva inkluderingar (inkludera filer som inkluderar andra filer).
+9. Inkludera andra filer, exempelvis en fil av något programspråk, ex. en C eller JavaScript-fil.
+10. Avdefinera macron och funktioner.
+11. Specifera en path till en fil att inkludera som ett argument till mdpp.
+
+Tänkt exempel på användning:
+Följande är ett tänkt exempel på använding när ovan features är implementerade:
+./mdpp mintext.mdpp mintext.out.md --link ~/mymacros/
+
+Där mdpp är programmet mintext.mdpp är en text med definerade macron, funktioner, etc. mintext.out.md är den processerade filen, --link är ett argument som säger till programmet var den ska leta efter filer, och ~/mymacros/ är mappen som hör till föregående argument.
+
+Uppskattad tidsplan:
+1. Implementera relavanta datastrukturer:
+    - Ca. 3-7 dagar (24 - 49 timmar) inklusive felsökning och att täcka eventuella minnesläckor. 
+2. Definitioner
+    - Ca. 1-2 arbetsveckor (168-336 timmar).
+    - Detta är den stora delen av programmet. För att bryta ned i ytterligare mindra delar:
+        1. Main-funktion som läser in filen. (>8h)
+        2. En funktion som scannar filen efter defintioner. (>16h)
+        3. En funktion som lägger in macron i en datastruktur. (>16h)
+        4. En funktion som skriver till en ny fil som ta bort defitionens raderna ur inputfilen och ersätter alla macron med vad de definerats till. (>120h)
+        5. Felsökning och igentäppning av missläckor (>8h)
+3. Funktioner:
+    - Ca. 1-2 arbetsveckor (>150 timmar) givet att punkt 2 funkar som det ska.
+        1. Funktion som upptäcker ett speciellt sorts macro vilket definerar ett macro med argument som används inuti defintionen. (> 100h)
+        2. Annorlunda beteende från punkt 2, pga att argument av okänd längd ska "klistras in" på korrekt ställe. (>50h)
+4. Macro för att inkludera andra filer.
+    - Ca. 3-4 arbetsdagar (24 - 38h). Min uppskattning är att givet att punkt 2 och 3 funkar som de ska kommer detta vara näst intill trivialt att implementera.
+5.  Möjligheten att välja namn på output filen. Ca (4-6 timmar)
+    - Tror inte att detta blir särskilt svårt givet att punkt 1 funkar som den ska.
+6.  Felhantering.
+    - Ca. 1 arbetsvecka (>40h)
+        1. Funktion som upptäcker felformatterad syntax och avbryter programmet med ett rimligt felmeddelanden som informerar användaren var felet upptäcktes. (>30h)
+        2. När programmet avbryts ska alla resurer släppas och minne frigöras, samt input dokumentet ska inte ha ändrats under programmets exekvering så att användaren får ett felformatterat dokument som inte går att använda.
+7. Rekursiva makron
+    - Ca. 1-2 arbetsveckor (40 - 80h)
+    - Funktion som tar passerar ett makro flera gånger och sätter in makron i ett makro, dessa "makron i makron" kan vara av okänd typ, ex. enkla strängar eller funktioner som tar ett argument av antingen makro eller en sträng.
+8. Rekursiva inkluderingar
+    - Ca 3-5 arbetsdagar (24 - 40h)
+    - Givet att punkt 4 fungerar borde det inte vara mer krångligt än att starta om processen i en ny fil.
+9. Inkludera filer av annan typ
+    - Ca 2-3 arbetsdagar (16 - 24h)
+    - Behöver funktion som definerar innehållet i en fil som ett macro.
+10. Avdefinera macron och funktioner.
+    - Ca 1-2 arbetsdagar (8-16h)
+    - Funktion som upptäcker att användaren vill avdefinera ett macro för att sedan kunna omdefinera det. (Eller inte)
+11. Specifera en path till en fil att inkludera som ett argument till mdpp.
+    - Ca 1 arbetsvecka (56h)
+    - Lägga till möjlighet att läsa in ett flertal filer som innehåller definitioner i en speciferad path genom ett argument till programmet.
+
+
+Överlag kommer den totala uppskattade tiden till minst 464 timmar, 58 arbetsdagar, eller 8.3 arbetsveckor. Eftersom alla funktioner inte behöver implementeras för att fungerande program ska uppnås uppskattar jag att det är fullt möjligt att implementera en version som minst gör punkt 1till 6.
+
+Programspårk och bibilotek:
+Jag tänker utveckla programmet i C för en UNIX miljö, där endast C's standardbibliotek kommer att användas allt annat skriver jag själv.
+
+Min programmeringserfarenhet:
+Jag ska börja läsa mitt 5e år till Civiligenjör i kommunikation- och informationsteknik på LTH, där min master specialiserar sig på mjukvaruutveckling. Jag har framför allt utvecklat inom objektorienterad programspråk så som Java och C++, jag har också erfarenhet inom webbutveckling. Jag har nyligen funnit ett intresse för mindre abstrakta språk som låter mig optimera min kod för prestanda och komma närmare processorn.
+
+Min erfarenhet inom C är begränsad, där det största programmet jag implementerat är simplex-algoritmen med branch-and-bound. Men där fick jag pseudokoden given, men jag har en bra grundkunskap inom språket och dess standardbibliotek.
+
+Rapportering av framsteg inom programmet:
+I slutet av varje vecka kommer det alltid finnas en körbar version av programmet i master-branchen på GitHub, som kommer vara publikt och postas i varje veckorapport. Ny utveckling kommer ske på en ny branch, och mergas då alla test går igenom.
