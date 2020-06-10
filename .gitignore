@@ -3,3 +3,4 @@ vgcore.*
 mdpp
 test_*
 */*.o
+*.o
