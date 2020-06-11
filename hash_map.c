@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "util.h"
-hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*hash) (const void* k)) 
+hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*hash) (const void* k), void (*key_del)(void*), void(*val_del)(void*))
 {
     hash_table* table;
     table = xmalloc(sizeof(hash_table));
@@ -12,6 +12,8 @@ hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*h
     table->inserted = 0; 
     table->compare = comp;
     table->hash = hash;
+    table->key_deleter = key_del;
+    table->value_deleter = val_del;
 
     return table;
 }
@@ -35,20 +37,22 @@ void delete_hash_table(hash_table* table)
 
     sz = table->sz;
     for (i = 0; i < sz; ++i) {
-        delete_entry(table->entries[i]);
+        delete_entry(table->entries[i], table->key_deleter, table->value_deleter);
     }
 
     free(table->entries);
     free(table);
 }
 
-void delete_entry(hash_entry* e)
+void delete_entry(hash_entry* e, void(*key_deleter)(void*), void(*val_deleter)(void*))
 {
     if(e == NULL)
         return;
     hash_entry* t = e;
     hash_entry* n;
     do {
+        key_deleter(t->key);
+        val_deleter(t->val);
         free(t->val);
         free(t->key);
         n = t;

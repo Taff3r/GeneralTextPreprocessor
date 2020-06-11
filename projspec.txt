@@ -1,4 +1,4 @@
-Projekt: Markdown Preprocessor
+Projekt: General Text Preprocessor
 av Simon Tenggren
 
 Bakgrund:

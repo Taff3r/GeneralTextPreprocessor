@@ -9,6 +9,8 @@ typedef struct hash_entry hash_entry;
 struct hash_table {
     hash_entry** entries;
     int (*compare)(const void* a, const void* b);
+    void(*key_deleter)(void*);
+    void(*value_deleter)(void*);
     size_t (*hash)(const void* k);
     size_t sz;
     size_t inserted; 
@@ -22,7 +24,7 @@ struct hash_entry {
 /*
  * Table operations
  */
-hash_table* new_hash_table(int (*compare)(const void* a, const void*b), size_t (*hash)(const void* k));
+hash_table* new_hash_table(int (*compare)(const void* a, const void*b), size_t (*hash)(const void* k), void (*key_del)(void*), void(*val_del)(void*));
 void delete_hash_table(hash_table*);
 int insert(hash_table*, void*, void*);
 void* lookup(hash_table*, const void* key);
@@ -32,6 +34,6 @@ void grow(hash_table*);
  * Entry operations
  */
 hash_entry* new_hash_entry();
-void delete_entry(hash_entry*);
+void delete_entry(hash_entry*, void(*key_deleter)(void*), void(*val_deleter)(void*));
 void copy(hash_entry*, hash_entry**, size_t, size_t(*)(const void*));
 #endif

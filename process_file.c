@@ -21,12 +21,23 @@ int cmp(const void* a, const void* b)
     const char* m_b = (const char*) b;
     return strcmp(m_a, m_b) == 0;
 }
+
+void delete_val(void* macro)
+{
+    macro_t* m = macro;
+    free(m->expansion);
+}
+
+void delete_key(void* str)
+{
+    return;
+}
 /*
  * Read all macro defintions and put them in the map.
  */
 void process(FILE* input, FILE* output)
 {
-    hash_table* map = new_hash_table(cmp, hash);
+    hash_table* map = new_hash_table(cmp, hash, delete_key, delete_val);
     char line[MAX_LINE_LENGTH];
     while(1) {
         /* Assume no word longer than 65536 chars */
