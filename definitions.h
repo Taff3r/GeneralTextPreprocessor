@@ -5,5 +5,6 @@
 #define MACRO_DEF "$def"
 #define FUNC_DEF  "$fun"
 #define MAX_IDENTIFIER_LENGTH 4
+#define MAX_ARGC 10
 #define RESERVED_MACRO_CHAR '$'
 #endif
