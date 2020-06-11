@@ -9,7 +9,7 @@ struct macro_t {
 size_t hash(const void* ptr);
 int cmp(const void* a, const void* b);
 void process(FILE*, FILE*);
-void write_line(hash_table*, const char*, FILE*);
-int add_macro(char*, hash_table*);
+void write_line(hash_table*, char*, FILE*);
+void add_macro(char*, hash_table*);
 
 #endif

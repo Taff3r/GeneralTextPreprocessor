@@ -42,17 +42,35 @@ void process(FILE* input, FILE* output)
     delete_hash_table(map);
 }
 
-void write_line(hash_table* macros, const char* line, FILE* output)
+void write_line(hash_table* macros, char* line, FILE* output)
 {
-    /* TODO: Check if line contains any of the macros in the table,
+    /* Check if line contains any of the macros in the table,
      * if so expand them if possible 
      */
-    printf("Writing line to file\n");
-    fputs(line, output);
-    printf("%s", line);
+    macro_t* m;
+    char* token = strtok(line, " ");
+    int add_nl = 0;
+    do {
+        if (token[strlen(token) - 1] == '\n') {
+            token = strtok(token, "\n");
+            add_nl = 1;
+        }
+        m = lookup(macros, token);
+        if (m == NULL) 
+            fputs(token, output);
+        else 
+            fputs(m->expansion, output);
+
+        if (add_nl){
+            fputs("\n", output);
+            add_nl = 0;
+        } else 
+            fputs(" ", output);
+
+    } while((token = strtok(NULL, " ")) != NULL);
 }
 
-int add_macro(char* line, hash_table* t)
+void add_macro(char* line, hash_table* t)
 {
         char* macro_type; // TODO: Can avoid alloc?
         char* key;
@@ -65,12 +83,5 @@ int add_macro(char* line, hash_table* t)
         macro_type = strtok(line, " "); /* TODO: Make case of which identifier */
         strcpy(key, strtok(NULL, " "));
         strcpy(m->expansion, strtok(NULL, "\n")); // Read until end of line.
-        printf("Macrotype: %s\n", macro_type);
-        printf("Macro key: %s\n", key);
-        printf("Expansion: %s\n", m->expansion);
-
         insert(t, key, m);
-        printf("%s\n", ((macro_t*)lookup(t, key))->expansion);
-        free(m->expansion);
-        return 0;
 }
