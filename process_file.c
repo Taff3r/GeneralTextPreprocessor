@@ -11,7 +11,6 @@ size_t hash(const void* ptr)
     const char* str = (char*) ptr;
     while ((c = *str++) != '\0')
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
     return hash;
 }
 
@@ -45,12 +44,14 @@ void process(FILE* input, FILE* output)
     hash_table* map = new_hash_table(cmp, hash, delete_key, delete_val);
     char line[MAX_LINE_LENGTH];
     while(1) {
-        /* Assume no word longer than 65536 chars */
+        /* Assume no line longer than MAX_LINE_LENGTH chars */
         char* r = fgets(line,MAX_LINE_LENGTH - 1, input);
         if (r == NULL)
             break;
         // normal word write to output
-        if (line[0] != RESERVED_MACRO_CHAR)
+        else if (strcmp(line, "\n") == 0) /* Empty line */
+            fputs("\n", output);
+        else if (line[0] != RESERVED_MACRO_CHAR)
             write_line(map, line, output);
         else /* Add since it is a macro line. */
             add_macro(line, map);
@@ -64,8 +65,9 @@ void write_line(hash_table* macros, char* line, FILE* output)
      * if so expand them if possible 
      */
     macro_t* m;
-    char* token = strtok(line, " ");
+    char* token = strtok(line, " (");
     int add_nl = 0;
+
     do {
         if (token[strlen(token) - 1] == '\n') {
             token = strtok(token, "\n");
@@ -75,7 +77,7 @@ void write_line(hash_table* macros, char* line, FILE* output)
         if (m == NULL) 
             fputs(token, output);
         else 
-            fputs(m->expansion, output);
+            expand_macro(token, strtok(NULL, " "), m, output);
 
         if (add_nl){
             fputs("\n", output);
@@ -84,6 +86,40 @@ void write_line(hash_table* macros, char* line, FILE* output)
             fputs(" ", output);
 
     } while((token = strtok(NULL, " ")) != NULL);
+}
+
+void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
+{
+    printf("token = %s, line = %s\n", token, line);
+    switch (macro->type)  {
+        case DEF:
+            fputs(macro->expansion, output);
+            break;
+        case FUN:
+            {
+                /* TODO Missing ')' error */
+                /* Read all args */
+                size_t i = 1;
+                char* line_args[macro->argc];
+
+                line_args[0] = strtok(line, ",)");
+                do {
+                    line_args[i] = strtok(line, ",)");
+                } while(i++ < macro->argc);
+                format_expansion(line_args, macro, output);
+            }
+            break;
+        case INC:
+            break;
+        default:
+            break;
+    }
+}
+
+void format_expansion(char* line_args[], const macro_t* macro, FILE* output) {
+    for (size_t i = 0; i < macro->argc; ++i)
+        printf("%s\n", line_args[i]);
+    /* Read each token in expansion and replace with corresponding line_arg */
 }
 
 void add_macro(char* line, hash_table* t)
@@ -106,7 +142,6 @@ void add_macro(char* line, hash_table* t)
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
         /* Add as function macro */
         strcpy(key, strtok(NULL, "("));
-        
         char* arg_t = strtok(NULL, ")");
         char* args = xcalloc(strlen(arg_t) + 1, sizeof(char)); // TODO: OPT: Can avoid alloc?
         strcpy(args, arg_t);
@@ -135,7 +170,7 @@ void init_fun_macro(macro_t* m, char* args)
        argv_tmp[argc++] = arg_t;
     } while((arg_t = strtok(NULL, ", \n")) != NULL);
     
-    m->argv = xmalloc(argc * sizeof(char*));
+    m->argv = xcalloc(argc, sizeof(char*));
     m->argc = argc;
     size_t i;
     for (i = 0; i < argc; ++i){
