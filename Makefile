@@ -14,4 +14,4 @@ all:
 test:
 	mdpp test
 clean: 
-	rm -f *.o $(PROGS)
+	rm -rf src/*.o $(PROGS)

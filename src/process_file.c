@@ -81,11 +81,12 @@ void write_line(hash_table* macros, char* line, FILE* output)
         else 
             expand_macro(tokens[i], line, m, output);
 
+        /* This feels hacky */
         if (put_nl) {
             fputs("\n", output);
             put_nl = 0;
         } else
-            fputs(" ", output); /* This feels hacky */
+            fputs(" ", output); 
         free(tokens[i]);
     }
     free(tokens);
@@ -101,7 +102,6 @@ void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
             {
                 /* TODO Missing ')' error */
                 /* Read all args */
-                printf("in CASE FUN \n");
                 size_t i = 1;
                 char* line_args[macro->argc];
                 line_args[0] = strtok(line, ",)"); /* Atleast one argument? */
@@ -110,7 +110,6 @@ void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
                 }
                 format_expansion(line_args, macro, output);
             }
-            printf("Leavingin CASE FUN \n");
             break;
         case INC:
             break;
@@ -135,49 +134,57 @@ void add_macro(char* line, hash_table* t)
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " "));
-        char* expansion = strtok(NULL, "\n");
+        char* expansion = strtok(NULL, NEWLINE_CHAR);
         m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
         strcpy(m->expansion, expansion);
         init_def_macro(m);
         insert(t, key, m);
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
         /* Add as function macro */
+        /* Key is the entire function including the args */
         strcpy(key, strtok(NULL, "("));
-        char* arg_t = strtok(NULL, ")");
-        char* args = xcalloc(strlen(arg_t) + 1, sizeof(char)); // TODO: OPT: Can avoid alloc?
-        strcpy(args, arg_t);
-        char* expansion = strtok(NULL, "\n");
-        m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
-        strcpy(m->expansion, expansion);
-        init_fun_macro(m, args);
+        char* arg_list = strtok(NULL, " ");
+        char* expansion = strtok(NULL, NEWLINE_CHAR);
+        init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
-        free(args);
+
     }
     /* TODO: Add file inclusion macro */
 }
 
-void init_fun_macro(macro_t* m, char* args)
+void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
 {
-    m->type = FUN;
+    char key_cpy[strlen(arg_list) + 1];
     size_t argc = 0;
-    char* argv_tmp[MAX_ARGC];
-    char* arg_t;
+    char** argv_tmp = xcalloc(MAX_ARGC, sizeof(char*));
 
-    arg_t = strtok(args, ", \n");
-    if (arg_t == NULL)
-        uerror_no_exit("Missing argument from function defintion\n"); /* TODO: Fix clean exit when missing args in function def */
+    m->type = FUN;
+    strcpy(key_cpy, arg_list);
+    m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
+    strcpy(m->expansion, expansion);
+    printf("%s\n", key_cpy);
+    size_t i = 0;
 
-    do {
-       argv_tmp[argc++] = arg_t;
-    } while((arg_t = strtok(NULL, ", \n")) != NULL);
-    
-    m->argv = xcalloc(argc, sizeof(char*));
-    m->argc = argc;
-    size_t i;
-    for (i = 0; i < argc; ++i){
-        m->argv[i] = xmalloc((strlen(argv_tmp[i]) + 1) * sizeof(char));
+    /* find first occurence of RESERVED_MACRO_CHAR */
+    /* TODO: Error handling, missing arg list, or parentheses */
+    while (i < strlen(key_cpy) - 1 && key_cpy[i] != ')') {
+        while(key_cpy[i] != RESERVED_MACRO_CHAR)
+            ++i;
+        char* arg = strtok(key_cpy + i, ",)");
+        argv_tmp[argc] = xcalloc(strlen(arg) + 1, sizeof(char));
+        strcpy(argv_tmp[argc], arg);
+        argc++;
+        ++i;
+    }
+    m->argc = argc - 1;
+    m->argv = xcalloc(m->argc, sizeof(char*));
+    for (i = 0; i < m->argc; ++i){
+        m->argv[i] = xcalloc(strlen(argv_tmp[i]) + 1, sizeof(char));
         strcpy(m->argv[i], argv_tmp[i]);
     }
+    for (i = 0; i < MAX_ARGC; ++i)
+        free(argv_tmp[i]);
+    free(argv_tmp);
 }
 void init_def_macro(macro_t* m)
 {
