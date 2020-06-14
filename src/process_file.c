@@ -71,10 +71,15 @@ void write_line(hash_table* macros, char* line, FILE* output)
     char** tokens = tokenize(line, &sz);
     size_t put_nl = 0;
     for (i = 0; i < sz; ++i) {
-        if (tokens[i][strlen(tokens[i]) - 1]== '\n'){
+        if (tokens[i][strlen(tokens[i]) - 1] == '\n'){
             put_nl = 1;
             strtok(tokens[i], "\n");
         }
+        /* This only changes things when the token might be a function call
+         * I think 
+         */
+        tokens[i] = strtok(tokens[i], "(");
+
         m = lookup(macros, tokens[i]);
         if (m == NULL)
             fputs(tokens[i], output);
@@ -92,22 +97,33 @@ void write_line(hash_table* macros, char* line, FILE* output)
     free(tokens);
 }
 
+/*
+ * TODO: Add table here to allow recursion.
+ *
+ */
 void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
 {
     switch (macro->type)  {
         case DEF:
-            fputs(macro->expansion, output);
+            {
+                fputs(macro->expansion, output);
+            }
             break;
         case FUN:
             {
                 /* TODO Missing ')' error */
                 /* Read all args */
-                size_t i = 1;
+                size_t i = 0;
+                
                 char* line_args[macro->argc];
-                line_args[0] = strtok(line, ",)"); /* Atleast one argument? */
-                while(i < macro->argc){
-                    line_args[i++] = strtok(NULL, ",)");
-                }
+                /* Find first left parentheses */
+                while(line[i] != '(')
+                    i++;
+                line = line + i + 1; /* Line is stack allocated so its ok */
+                i = 0;
+                line_args[i] = strtok(line, ",)");
+                for (i = 1; i < macro->argc; ++i)
+                    line_args[i] = strtok(NULL, ",)");
                 format_expansion(line_args, macro, output);
             }
             break;
@@ -117,9 +133,50 @@ void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
             break;
     }
 }
-
+/*
+ * TODO: Include table here for recursion.
+ */
 void format_expansion(char* line_args[], const macro_t* macro, FILE* output) {
+    size_t t_cnt;
+    size_t i;
+    size_t k;
+    unsigned found; 
+    unsigned put_nl = 0;
     /* Read each token in expansion and replace with corresponding line_arg */
+    char** expansion_tokens = tokenize(macro->expansion, &t_cnt);
+    for (i = 0; i < t_cnt; ++i) {
+        if (expansion_tokens[i][strlen(expansion_tokens[i]) - 1] == '\n') {
+           put_nl = 1; 
+           expansion_tokens[i] = strtok(expansion_tokens[i], "\n");
+        }
+        found = 0;
+        for (k = 0; k < macro->argc; ++k){
+            /* The arg can be inside a token aswell
+             * But try this first for now TODO
+             * */
+            if (strcmp(macro->argv[k], expansion_tokens[i]) == 0) {
+               printf("%s == %s\n", macro->argv[k], expansion_tokens[i]);
+               found = 1; 
+               break;
+            }
+            /* Try to find the arg inside the token */
+        }
+        printf("k = %ld\n", k);
+        if (found)
+            fputs(line_args[k], output);
+        else 
+            fputs(expansion_tokens[i], output);
+        if (put_nl)
+            fputs("\n", output);
+        else
+            fputs(" ", output);
+        put_nl = 0;
+        found = 0;
+    }
+    fputs(NEWLINE_CHAR, output);
+    for (i = 0; i < t_cnt; ++i)
+        free(expansion_tokens[i]);
+    free(expansion_tokens);
 }
 
 void add_macro(char* line, hash_table* t)
@@ -157,28 +214,36 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
     char key_cpy[strlen(arg_list) + 1];
     size_t argc = 0;
     char** argv_tmp = xcalloc(MAX_ARGC, sizeof(char*));
-
     m->type = FUN;
     strcpy(key_cpy, arg_list);
     m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
     strcpy(m->expansion, expansion);
-    printf("%s\n", key_cpy);
     size_t i = 0;
-
-    /* find first occurence of RESERVED_MACRO_CHAR */
+    printf("%s\n", arg_list);
+    //size_t len = strlen(arg_list);
+    size_t len = strlen(arg_list);
+    printf("k_c = %s\n", key_cpy);
+    /* find first occurence of RESERVED_MACRO_CHAR */;
     /* TODO: Error handling, missing arg list, or parentheses */
-    while (i < strlen(key_cpy) - 1 && key_cpy[i] != ')') {
+    while (i < len){
+        /* Find position of first RESERVED_MACRO_CHAR */
         while(key_cpy[i] != RESERVED_MACRO_CHAR)
             ++i;
-        char* arg = strtok(key_cpy + i, ",)");
-        argv_tmp[argc] = xcalloc(strlen(arg) + 1, sizeof(char));
-        strcpy(argv_tmp[argc], arg);
+        /* Find position of next ',' or ')' */
+        size_t n = i;
+        while (key_cpy[n] != ',' &&  key_cpy[n] != ')')
+            n++;
+        printf("key_cpy[%ld] = \'%c\', key_cpy[%ld] = \'%c\'\n", i, key_cpy[i], n, key_cpy[n]);
+        size_t k;
+        argv_tmp[argc] = xcalloc(n - i + 1, sizeof(char));
+        for (k = 0; k < n - i; ++k)
+            argv_tmp[argc][k] = key_cpy[i + k];
         argc++;
-        ++i;
+        i += n + 1; 
     }
-    m->argc = argc - 1;
-    m->argv = xcalloc(m->argc, sizeof(char*));
-    for (i = 0; i < m->argc; ++i){
+    m->argc = argc;
+    m->argv = xcalloc(argc, sizeof(char*));
+    for (i = 0; i < argc; ++i){
         m->argv[i] = xcalloc(strlen(argv_tmp[i]) + 1, sizeof(char));
         strcpy(m->argv[i], argv_tmp[i]);
     }
