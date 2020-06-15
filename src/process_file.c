@@ -68,7 +68,7 @@ void write_line(hash_table* macros, char* line, FILE* output)
     macro_t* m;
     size_t i;
     size_t sz;
-    char** tokens = tokenize(line, &sz);
+    char** tokens = tokenize(line, STRING_DELIMTERS, &sz);
     size_t put_nl = 0;
     for (i = 0; i < sz; ++i) {
         if (tokens[i][strlen(tokens[i]) - 1] == '\n'){
@@ -78,8 +78,7 @@ void write_line(hash_table* macros, char* line, FILE* output)
         /* This only changes things when the token might be a function call
          * I think 
          */
-        tokens[i] = strtok(tokens[i], "(");
-
+        tokens[i] = strtok(tokens[i], STRING_DELIMTERS);
         m = lookup(macros, tokens[i]);
         if (m == NULL)
             fputs(tokens[i], output);
@@ -125,6 +124,7 @@ void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
                 for (i = 1; i < macro->argc; ++i)
                     line_args[i] = strtok(NULL, ",)");
                 format_expansion(line_args, macro, output);
+                /* TODO: Add check that all i == macro->argc */
             }
             break;
         case INC:
@@ -137,45 +137,11 @@ void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
  * TODO: Include table here for recursion.
  */
 void format_expansion(char* line_args[], const macro_t* macro, FILE* output) {
-    size_t t_cnt;
-    size_t i;
-    size_t k;
-    unsigned found; 
-    unsigned put_nl = 0;
     /* Read each token in expansion and replace with corresponding line_arg */
-    char** expansion_tokens = tokenize(macro->expansion, &t_cnt);
-    for (i = 0; i < t_cnt; ++i) {
-        if (expansion_tokens[i][strlen(expansion_tokens[i]) - 1] == '\n') {
-           put_nl = 1; 
-           expansion_tokens[i] = strtok(expansion_tokens[i], "\n");
-        }
-        found = 0;
-        for (k = 0; k < macro->argc; ++k){
-            /* The arg can be inside a token aswell
-             * But try this first for now TODO
-             * Its better to do a search and replace on the line.
-             * */
-            if (strcmp(macro->argv[k], expansion_tokens[i]) == 0) {
-               found = 1; 
-               break;
-            }
-            /* Try to find the arg inside the token */
-        }
-        if (found)
-            fputs(line_args[k], output);
-        else 
-            fputs(expansion_tokens[i], output);
-        if (put_nl)
-            fputs("\n", output);
-        else
-            fputs(" ", output);
-        put_nl = 0;
-        found = 0;
-    }
-    fputs(NEWLINE_CHAR, output);
-    for (i = 0; i < t_cnt; ++i)
-        free(expansion_tokens[i]);
-    free(expansion_tokens);
+    char* to_put;
+    to_put = search_and_replace_all(macro->expansion, macro->argv, line_args, macro->argc);
+    fputs(to_put, output);
+    free(to_put);
 }
 
 void add_macro(char* line, hash_table* t)
@@ -218,7 +184,6 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
     m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
     strcpy(m->expansion, expansion);
     size_t i = 0;
-    //size_t len = strlen(arg_list);
     size_t len = strlen(arg_list);
     /* find first occurence of RESERVED_MACRO_CHAR */;
     /* TODO: Error handling, missing arg list, or parentheses */
@@ -235,7 +200,7 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
         for (k = 0; k < n - i; ++k)
             argv_tmp[argc][k] = key_cpy[i + k];
         argc++;
-        i += n + 1; 
+        i += n - i + 1; 
     }
     m->argc = argc;
     m->argv = xcalloc(argc, sizeof(char*));
