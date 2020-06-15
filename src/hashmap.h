@@ -30,6 +30,7 @@ int insert(hash_table*, void*, void*);
 void* lookup(hash_table*, const void* key);
 int remove_from_table(hash_table*, const void* key);
 void grow(hash_table*);
+void** keys(hash_table*, size_t*);
 /*
  * Entry operations
  */

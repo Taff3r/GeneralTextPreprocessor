@@ -160,3 +160,28 @@ int remove_from_table(hash_table* table, const void* key)
     } while (e != NULL);
     return 0;
 }
+
+/**
+ * Returns all non-null keys.
+ * Ownership: Only outer pointer, not inner.
+ */
+void** keys(hash_table* t, size_t* k) {
+    size_t i;
+    void* keys_tmp[t->sz];
+
+    *k = 0;
+    for (i = 0; i < t->sz; ++i)
+        if (t->entries[i] != NULL){
+            keys_tmp[(*k)++] = t->entries[i]->key;
+            hash_entry* tmp = t->entries[i];
+            while(tmp->next != NULL) {
+                keys_tmp[(*k)++] = tmp->next->key;
+                tmp = tmp->next;
+            }
+        }
+    void** keys = xcalloc(*k, sizeof(void*));
+    for (i = 0; i < *k; ++i){
+        keys[i] = keys_tmp[i];
+    }
+    return keys;
+}

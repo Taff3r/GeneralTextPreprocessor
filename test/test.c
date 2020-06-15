@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "../hashmap.h"
+#include "../src/hashmap.h"
 #include <assert.h>
 #define INSERTS (999)
 size_t hash(const void* ptr)
@@ -12,6 +12,15 @@ size_t hash(const void* ptr)
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
     return hash;
+}
+
+void key_del(void* v)
+{
+    return;
+}
+void val_del(void* v)
+{
+    return;
 }
 int cmp(const void* a, const void* b)
 {
@@ -40,7 +49,7 @@ int icmp(const void* a, const void* b)
 }
 int main(void)
 {
-    hash_table* t = new_hash_table(cmp, hash);
+    hash_table* t = new_hash_table(cmp, hash, key_del, val_del);
     int i;
     // Test inserts and lookups
     for (i = 0; i < INSERTS; ++i) {
@@ -51,13 +60,11 @@ int main(void)
         insert(t, s, k);
         assert(*k == *(int*)lookup(t, s));
     }
-
     printf("Test(1) passed, going to clean up!\n");
     delete_hash_table(t);
 
 
-
-    hash_table* is = new_hash_table(icmp, ihash);
+    hash_table* is = new_hash_table(icmp, ihash, key_del, val_del);
     for (i = 0; i < INSERTS; ++i) {
         char* s = malloc(sizeof(char) * 5);
         if (s == NULL) {
@@ -71,6 +78,11 @@ int main(void)
         assert(strcmp(s, (char*)lookup(is, k)) == 0);
     }
 
+    size_t l;
+    int** ks = (int**) keys(is, &l);
+    for (i = 0; i < l; ++i)
+        printf("%d\n", *(int*) ks[i]);
+    free(ks);
 
     // Test lookup of value that doesn't exist
     assert(lookup(is, "some random value") == NULL);
