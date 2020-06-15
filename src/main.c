@@ -9,13 +9,12 @@ int main(int argc, char** argv)
     FILE* input;
     FILE* output = NULL;
 
+    /* TODO add option to read from stdin */
     if (argc < 2)
         uerror("Missing file to process!\n");
 
     file_name = malloc(sizeof(char) * (strlen(argv[1]) + 1));
     strcpy(file_name, argv[1]);
-    printf("FILENAME : %s\n", file_name);
-    
     input = fopen(file_name, "r");
     if (!input) {
         uerror_no_exit("No such file!\n");

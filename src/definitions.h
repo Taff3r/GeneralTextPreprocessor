@@ -8,6 +8,7 @@
 #define MAX_IDENTIFIER_LENGTH (4)
 #define MAX_ARGC (10)
 #define RESERVED_MACRO_CHAR '$'
+#define STRING_DELIMTERS ", ("
 #define NEWLINE_CHAR "\n"   /* String used to define how new lines are encoded
                              * Needed because some use \r\n while some use
                              * just \n.
