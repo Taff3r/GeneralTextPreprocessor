@@ -153,15 +153,14 @@ void format_expansion(char* line_args[], const macro_t* macro, FILE* output) {
         for (k = 0; k < macro->argc; ++k){
             /* The arg can be inside a token aswell
              * But try this first for now TODO
+             * Its better to do a search and replace on the line.
              * */
             if (strcmp(macro->argv[k], expansion_tokens[i]) == 0) {
-               printf("%s == %s\n", macro->argv[k], expansion_tokens[i]);
                found = 1; 
                break;
             }
             /* Try to find the arg inside the token */
         }
-        printf("k = %ld\n", k);
         if (found)
             fputs(line_args[k], output);
         else 
@@ -219,10 +218,8 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
     m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
     strcpy(m->expansion, expansion);
     size_t i = 0;
-    printf("%s\n", arg_list);
     //size_t len = strlen(arg_list);
     size_t len = strlen(arg_list);
-    printf("k_c = %s\n", key_cpy);
     /* find first occurence of RESERVED_MACRO_CHAR */;
     /* TODO: Error handling, missing arg list, or parentheses */
     while (i < len){
@@ -233,7 +230,6 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
         size_t n = i;
         while (key_cpy[n] != ',' &&  key_cpy[n] != ')')
             n++;
-        printf("key_cpy[%ld] = \'%c\', key_cpy[%ld] = \'%c\'\n", i, key_cpy[i], n, key_cpy[n]);
         size_t k;
         argv_tmp[argc] = xcalloc(n - i + 1, sizeof(char));
         for (k = 0; k < n - i; ++k)
