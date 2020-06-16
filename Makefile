@@ -14,4 +14,4 @@ all:
 test:
 	gtpp test
 clean: 
-	rm -rf src/*.o $(PROGS)
+	rm -rf src/*.o $(PROGS) vgcore*

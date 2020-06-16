@@ -3,8 +3,14 @@
 #include <string.h> 
 #include <stdio.h> 
 #include <stdlib.h> 
+#include <malloc.h>
 int main(int argc, char** argv)
 {
+#if MEM_DEBUG
+    printf("------BEGIN MAIN------\n");
+    malloc_stats();
+    printf("---------------------\n");
+#endif
     char* file_name;
     FILE* input;
     FILE* output = NULL;

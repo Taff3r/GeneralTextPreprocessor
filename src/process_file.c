@@ -42,6 +42,7 @@ void delete_key(void* str)
  */
 void process(FILE* input, FILE* output)
 {
+
     hash_table* map = new_hash_table(cmp, hash, delete_key, delete_val);
     char line[MAX_LINE_LENGTH];
     while(1) {
@@ -56,9 +57,10 @@ void process(FILE* input, FILE* output)
             write_line(map, line, output);
         else /* Add since it is a macro line. */
             add_macro(line, map);
+
     }
     delete_hash_table(map);
-}
+} 
 
 void write_line(hash_table* macros, char* line, FILE* output)
 {
@@ -67,72 +69,90 @@ void write_line(hash_table* macros, char* line, FILE* output)
      */
     macro_t* m;
     size_t i;
-    size_t sz;
-    char** tokens = tokenize(line, STRING_DELIMTERS, &sz);
-    size_t put_nl = 0;
-    for (i = 0; i < sz; ++i) {
-        if (tokens[i][strlen(tokens[i]) - 1] == '\n'){
-            put_nl = 1;
-            strtok(tokens[i], "\n");
-        }
-        /* This only changes things when the token might be a function call
-         * I think 
-         */
-        tokens[i] = strtok(tokens[i], STRING_DELIMTERS);
-        m = lookup(macros, tokens[i]);
-        if (m == NULL)
-            fputs(tokens[i], output);
-        else 
-            expand_macro(tokens[i], line, m, output);
+    size_t sz; 
 
-        /* This feels hacky */
-        if (put_nl) {
-            fputs("\n", output);
-            put_nl = 0;
-        } else
-            fputs(" ", output); 
-        free(tokens[i]);
+    char** macro_keys = (char**) keys(macros, &sz);
+    for (i = 0; i < sz; ++i) {
+        while (contains(line, (char*) macro_keys[i])) {
+            m = lookup(macros, macro_keys[i]);
+            if (m != NULL) {
+                expand_macro(macro_keys[i], line, m, output);
+            }
+        } 
     }
-    free(tokens);
+    free(macro_keys);
+    fputs(line, output);
 }
 
-/*
- * TODO: Add table here to allow recursion.
- *
- */
-void expand_macro(char* token, char* line, const macro_t* macro, FILE* output)
+void expand_macro(char* key, char* line, const macro_t* macro, FILE* output)
 {
-    switch (macro->type)  {
+    switch(macro->type) {
         case DEF:
             {
-                fputs(macro->expansion, output);
+                char* tmp = search_and_replace(line, key, macro->expansion);
+                strcpy(line, tmp);
+                free(tmp);
             }
             break;
         case FUN:
             {
-                /* TODO Missing ')' error */
-                /* Read all args */
-                size_t i = 0;
-                
-                char* line_args[macro->argc];
-                /* Find first left parentheses */
-                while(line[i] != '(')
-                    i++;
-                line = line + i + 1; /* Line is stack allocated so its ok */
-                i = 0;
-                line_args[i] = strtok(line, ",)");
-                for (i = 1; i < macro->argc; ++i)
-                    line_args[i] = strtok(NULL, ",)");
-                format_expansion(line_args, macro, output);
-                /* TODO: Add check that all i == macro->argc */
+             char* expanded = expand_function(key, line, macro);
+             strcpy(line, expanded);  
+             free(expanded);
             }
-            break;
-        case INC:
             break;
         default:
             break;
     }
 }
+/*
+ * TODO: Add table here to allow recursion.
+ *
+ */
+char* expand_function(const char* key, char* line, const macro_t* macro) 
+{
+    char* line_args[macro->argc];
+    /* Find instance of key in line */
+    char* key_il;
+    char line_cpy[MAX_LINE_LENGTH]; /* TODO correct size */
+    strcpy(line_cpy, line);
+    key_il = strstr(line_cpy, key);
+
+    /* Find the pos of parentheses*/
+    size_t pos_of_parentheses;
+    /* Read the args inside the parentheses */
+    pos_of_parentheses = key_il - line_cpy + strlen(key);
+    size_t i = 0;
+    char* line_p = line_cpy + pos_of_parentheses + 1;
+    line_args[i++] = strtok(line_p, ",)");
+    for (; i < macro->argc; ++i) {
+        line_p += strlen(line_args[i - 1]) + 1;
+        line_args[i] = strtok(line_p, ",)");
+    }
+
+    /* Replaced the arguments provided with to the expansion */
+    char* expansion = search_and_replace_all(macro->expansion, macro->argv, \
+            line_args, macro->argc);
+    /* TODO CORRECT SIZE */
+    char* concat;
+    concat = xcalloc(strlen(key) + macro->argc * MAX_WORD_LENGTH + 1, sizeof(char));
+    char key_cpy[strlen(key) + 1];
+    strcpy(key_cpy, key);
+    strcat(concat, key_cpy);
+    strcat(concat, "(");
+    for (i = 0; i < macro->argc; ++i) {
+        strcat(concat, line_args[i]);
+        if( i + 1 != macro->argc)
+            strcat(concat, ",");
+    }
+    strcat(concat, ")");
+    /* Replace the key and the arg list in the string with the expansion */
+    char* final = search_and_replace(line, concat, expansion);
+    free(concat);
+    free(expansion);
+    return final;
+}
+
 /*
  * TODO: Include table here for recursion.
  */
@@ -156,14 +176,13 @@ void add_macro(char* line, hash_table* t)
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " "));
-        char* expansion = strtok(NULL, NEWLINE_CHAR);
+        char* expansion = strtok(NULL, NEWLINE_CHAR); /* A lot of memory */
         m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
         strcpy(m->expansion, expansion);
         init_def_macro(m);
         insert(t, key, m);
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
         /* Add as function macro */
-        /* Key is the entire function including the args */
         strcpy(key, strtok(NULL, "("));
         char* arg_list = strtok(NULL, " ");
         char* expansion = strtok(NULL, NEWLINE_CHAR);
