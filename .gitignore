@@ -1,6 +1,6 @@
 vgcore.*
 *.out
-mdpp
+gtpp
 test_*
 */*.o
 *.o
