@@ -10,15 +10,28 @@ $fun FOUR($arg,$barg,$carg,$darg) $arg $barg $carg $darg
 some other text
 HELLO
 more text...
-Another: HELLO MYNAME
+Another: HELLO, MYNAME
 SHIT
 
 Hello there my name is MYNAME and I am MYAGE
 
-TEST(hello) MYNAME
-YTC(xNinjaViking)
-ADD(1,3)
-THREE(1,2,3)
-FOUR(1,2,3,4) some text
 #### SHIT MYNAME
+Some more text
+text
+txt
+ttt
+t
+ADD(1,2) in some other line
+YTC(xNinjaViking)
 
+text ADD(2,1)
+asdfasf asdfasdfasd
+some more text FOUR(one,two,three,four), and some more text.
+asdfasdfasdfasdfasdfasdf
+test
+test
+test
+test
+test
+test
+SOME

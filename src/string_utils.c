@@ -23,7 +23,7 @@ char** tokenize(char* line, char* delimeters, size_t* sz)
  * Search the string str for the token and replaces it with the replacement.
  * Returns the a heap allocated string which has been modified. 
  */
-char* search_and_replace(char* str, char* token, char* replacement) 
+char* search_and_replace(char* str, const char* token, char* replacement) 
 {
     char* replaced;
     replaced = xcalloc(strlen(str) + strlen(replacement) + 1, sizeof(char));

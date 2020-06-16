@@ -21,8 +21,9 @@ void delete_key(void*);
 void delete_val(void*);
 void process(FILE*, FILE*);
 
-void expand_macro(char* token, char* line, const macro_t* macro, FILE* output);
+void expand_macro(char* key, char* line, const macro_t* macro, FILE* output);
 void write_line(hash_table*, char*, FILE*);
+char* expand_function(const char* key, char* line, const macro_t* macro);
 void add_macro(char*, hash_table*);
 void init_fun_macro(macro_t*, char*, char*);
 void init_def_macro(macro_t*);
