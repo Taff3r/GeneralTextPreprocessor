@@ -7,12 +7,14 @@ $fun TEST($arg) The arg evaluates to: $arg
 $fun YTC($c) https://www.youtube.com/channel/$c
 $fun THREE($a,$b,$c) $a $b $c
 $fun FOUR($arg,$barg,$carg,$darg) $arg $barg $carg $darg
+$inc ./macros/greek.gtpp
 some other text
 HELLO
 more text...
 Another: HELLO, MYNAME
 SHIT
-
+LAMDA
+CAPL
 Hello there my name is MYNAME and I am MYAGE
 
 #### SHIT MYNAME
