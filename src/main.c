@@ -6,32 +6,37 @@
 #include <malloc.h>
 int main(int argc, char** argv)
 {
-#if MEM_DEBUG
-    printf("------BEGIN MAIN------\n");
-    malloc_stats();
-    printf("---------------------\n");
-#endif
-    char* file_name;
-    FILE* input;
-    FILE* output = NULL;
+    char* file_name        = NULL;
+    char* output_file_name = NULL;
+    FILE* input            = NULL;
+    FILE* output           = NULL;
 
-    /* TODO add option to read from stdin */
-    if (argc < 2)
-        uerror("Missing file to process!\n");
-
-    file_name = malloc(sizeof(char) * (strlen(argv[1]) + 1));
-    strcpy(file_name, argv[1]);
-    input = fopen(file_name, "r");
-    if (!input) {
-        uerror_no_exit("No such file!\n");
-        goto CLEANUP;
-    }
-
-    output = fopen("a.pp", "w");
+    if (argc > 1) {
+        file_name = malloc(sizeof(char) * (strlen(argv[1]) + 1));
+        strcpy(file_name, argv[1]);
+        input = fopen(file_name, "r");
+        if (!input) {
+            uerror_no_exit("No such file!\n");
+            goto CLEANUP;
+        }
+    } else 
+        input = stdin;
+       
+    if (argc > 2) {
+        output_file_name = malloc(sizeof(char) * (strlen(argv[2]) + 1));
+        strcpy(output_file_name, argv[2]);
+        printf("output name: %s\n", output_file_name);
+        output = fopen(output_file_name, "w");
+    } else 
+        output = stdout; 
+        
     process(input, output);
     
 CLEANUP:
-    free(file_name);
+    if (file_name != NULL)
+        free(file_name);
+    if (output_file_name != NULL)
+        free(output_file_name);
     fclose(input);
     fclose(output);
 }

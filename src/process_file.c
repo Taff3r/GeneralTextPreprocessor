@@ -5,6 +5,7 @@
 #include "hashmap.h"
 #include "definitions.h"
 #include "string_utils.h"
+#include "file_inclusion.h"
 size_t hash(const void* ptr)
 {
     size_t hash = 5381;
@@ -173,6 +174,7 @@ void add_macro(char* line, hash_table* t)
     m = xmalloc(sizeof(macro_t));
     key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
     macro_type = strtok(line, " "); 
+    /* TODO Add possibility of having any white space as seperation to expan */
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " "));
@@ -188,9 +190,17 @@ void add_macro(char* line, hash_table* t)
         char* expansion = strtok(NULL, NEWLINE_CHAR);
         init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
+    } else if (strcmp(macro_type, INC_DEF) == 0) {
+        char* path;
+        path = xcalloc(MAX_LINE_LENGTH, sizeof(char));
 
+        strcpy(path, strtok(NULL, NEWLINE_CHAR));
+        include_file(path, t);
+        free(path);
+        /* Turns out these aren't needed here. TODO refactor */
+        free(m);
+        free(key);
     }
-    /* TODO: Add file inclusion macro */
 }
 
 void init_fun_macro(macro_t* m, char* arg_list, char* expansion)

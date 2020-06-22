@@ -5,13 +5,16 @@
 #define MAX_WORD_LENGTH (1024)  /* NEEDS to be power of 2 */
 #define MACRO_DEF "$def"
 #define FUNC_DEF  "$fun"
+#define INC_DEF   "$inc"
 #define MAX_IDENTIFIER_LENGTH (4)
 #define MAX_ARGC (10)
 #define RESERVED_MACRO_CHAR '$'
 #define STRING_DELIMTERS ", ("
-#define NEWLINE_CHAR "\n"   /* String used to define how new lines are encoded
-                             * Needed because some use \r\n while some use
-                             * just \n.
-                             */
+
+/* String used to define how new lines are encoded
+ * Needed because some use \r\n while some use
+ * just \n.
+ */
+#define NEWLINE_CHAR "\n"   
 
 #endif
