@@ -195,7 +195,6 @@ void add_macro(char* line, hash_table* t)
         path = xcalloc(MAX_LINE_LENGTH, sizeof(char));
 
         strcpy(path, strtok(NULL, NEWLINE_CHAR));
-        printf("including file: %s\n", path);
         include_file(path, t);
         free(path);
         /* Turns out these aren't needed here. TODO refactor */
