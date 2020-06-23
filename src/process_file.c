@@ -175,15 +175,16 @@ void add_macro(char* line, hash_table* t)
 
     m = xmalloc(sizeof(macro_t));
     key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
-    macro_type = strtok(line, " "); 
+    macro_type = strtok(line, " \t"); 
     /* TODO Add possibility of having any white space as seperation to expan */
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
-        strcpy(key, strtok(NULL, " "));
+        strcpy(key, strtok(NULL, " \t"));
         if (lookup(t, key))
             formatted_uerror("Multiple definitions of key: %s\n", key);
 
         char* expansion = strtok(NULL, NEWLINE_CHAR); /* A lot of memory */
+        trim_leading_whitespace(expansion);
         m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
         strcpy(m->expansion, expansion);
         init_def_macro(m);
@@ -194,7 +195,7 @@ void add_macro(char* line, hash_table* t)
         char* arg_list = strtok(NULL, ")");
         trim_whitespace(arg_list);
         char* expansion = strtok(NULL, NEWLINE_CHAR);
-        expansion += 1; /* TODO SPAGHETT */
+        trim_leading_whitespace(expansion);
         init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
     } else if (strcmp(macro_type, INC_DEF) == 0) {
@@ -207,7 +208,8 @@ void add_macro(char* line, hash_table* t)
         /* Turns out these aren't needed here. TODO refactor */
         free(m);
         free(key);
-    }
+    } else 
+        formatted_uerror("Unrecoginized token: %s\n", macro_type);
 }
 
 void init_fun_macro(macro_t* m, char* arg_list, char* expansion)

@@ -3,6 +3,7 @@
 #include "definitions.h"
 #include "util.h"
 #include <stdio.h>
+#include <ctype.h>
 /*
  * Turns the line into sz number of tokens, depending on the delimeters.
  */
@@ -88,4 +89,29 @@ void trim_whitespace(char* str)
    char* trimmed = search_and_replace_all(str, tokens, replacements, 2);
    strcpy(str, trimmed);
    free(trimmed);
+}
+
+/**
+ * Trims leading white space from a string.
+ * 
+ *
+ */
+void trim_leading_whitespace(char* str)
+{
+    size_t i;
+    size_t len;
+    char* cpy = xcalloc(strlen(str) + 1, sizeof(char));
+    char* orig_pos = cpy;
+    strcpy(cpy, str);
+    len = strlen(cpy);
+    for (i = 0; i < len; ++i) {
+        if (cpy[i] != ' ' && cpy[i] != '\t')
+            break;
+        else {
+            cpy += 1;
+            i--;
+        }
+    }
+    strcpy(str, cpy);
+    free(orig_pos);
 }

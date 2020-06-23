@@ -3,9 +3,9 @@
 
 #define MAX_LINE_LENGTH (65536) /* NEEDS to be power of 2 */
 #define MAX_WORD_LENGTH (1024)  /* NEEDS to be power of 2 */
-#define MACRO_DEF "$def"
-#define FUNC_DEF  "$fun"
-#define INC_DEF   "$inc"
+#define MACRO_DEF "$DEF"
+#define FUNC_DEF  "$FUN"
+#define INC_DEF   "$INC"
 #define MAX_IDENTIFIER_LENGTH (4)
 #define MAX_ARGC (10)
 #define RESERVED_MACRO_CHAR '$'
