@@ -5,7 +5,7 @@ $def MYNAME Simon
 $def MYAGE 22 years old.
 $fun TEST($arg) The arg evaluates to: $arg
 $fun YTC($c) https://www.youtube.com/channel/$c
-$fun THREE($a,$b,$c) $a $b $c
+$fun THREE($a, $b, $c) $a $b $c
 $fun FOUR($arg,$barg,$carg,$darg) $arg $barg $carg $darg
 $inc ./macros/greek.gtpp
 some other text
@@ -37,3 +37,4 @@ test
 test
 test
 SOME
+THREE(ONE,two,3)

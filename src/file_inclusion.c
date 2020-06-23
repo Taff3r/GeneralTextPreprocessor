@@ -16,10 +16,7 @@ void include_file(const char* path, hash_table* macros)
     inc = fopen(path, "r");
     char line[MAX_LINE_LENGTH];
     if (!inc) {
-        char formatted[MAX_LINE_LENGTH];
-        sprintf(formatted, "Cannot open path: %s\n", path);
-        uerror_no_exit(formatted);
-        goto CLOSE;
+        formatted_uerror("Cannot open path %s\n", path);
     }
 
     /* Read file line by line */
@@ -36,7 +33,5 @@ void include_file(const char* path, hash_table* macros)
 
 
 
-CLOSE:
-    if (inc != NULL)
-        fclose(inc);
+    fclose(inc);
 }

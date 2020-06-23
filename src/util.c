@@ -1,6 +1,7 @@
 #include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "definitions.h"
 void uerror(const char* msg)
 {
     fprintf(stderr, msg);
@@ -11,6 +12,13 @@ void uerror(const char* msg)
 void uerror_no_exit(const char* msg)
 {
     fprintf(stderr, msg);
+}
+
+void formatted_uerror(const char* msg, const char* token)
+{
+    char formatted[MAX_LINE_LENGTH];
+    sprintf(formatted, msg, token);
+    uerror(formatted);
 }
 
 void* xmalloc(size_t size)

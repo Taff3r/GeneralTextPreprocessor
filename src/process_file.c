@@ -1,4 +1,5 @@
 #include "process_file.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include "util.h"
 #include <string.h>
@@ -108,7 +109,8 @@ void expand_macro(char* key, char* line, const macro_t* macro, FILE* output)
 }
 /*
  * TODO: Add table here to allow recursion.
- *
+ * TODO: Make sure that a key is not used as an argument without it being
+ *       called properly.
  */
 char* expand_function(const char* key, char* line, const macro_t* macro) 
 {
@@ -118,7 +120,6 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
     char line_cpy[MAX_LINE_LENGTH]; /* TODO correct size */
     strcpy(line_cpy, line);
     key_il = strstr(line_cpy, key);
-
     /* Find the pos of parentheses*/
     size_t pos_of_parentheses;
     /* Read the args inside the parentheses */
@@ -147,6 +148,7 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
             strcat(concat, ",");
     }
     strcat(concat, ")");
+
     /* Replace the key and the arg list in the string with the expansion */
     char* final = search_and_replace(line, concat, expansion);
     free(concat);
@@ -178,6 +180,9 @@ void add_macro(char* line, hash_table* t)
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " "));
+        if (lookup(t, key))
+            formatted_uerror("Multiple definitions of key: %s\n", key);
+
         char* expansion = strtok(NULL, NEWLINE_CHAR); /* A lot of memory */
         m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
         strcpy(m->expansion, expansion);
@@ -186,8 +191,10 @@ void add_macro(char* line, hash_table* t)
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
         /* Add as function macro */
         strcpy(key, strtok(NULL, "("));
-        char* arg_list = strtok(NULL, " ");
+        char* arg_list = strtok(NULL, ")");
+        trim_whitespace(arg_list);
         char* expansion = strtok(NULL, NEWLINE_CHAR);
+        expansion += 1; /* TODO SPAGHETT */
         init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
     } else if (strcmp(macro_type, INC_DEF) == 0) {
@@ -213,7 +220,7 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
     m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
     strcpy(m->expansion, expansion);
     size_t i = 0;
-    size_t len = strlen(arg_list);
+    size_t len = strlen(key_cpy);
     /* find first occurence of RESERVED_MACRO_CHAR */;
     /* TODO: Error handling, missing arg list, or parentheses */
     while (i < len){
@@ -222,7 +229,7 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
             ++i;
         /* Find position of next ',' or ')' */
         size_t n = i;
-        while (key_cpy[n] != ',' &&  key_cpy[n] != ')')
+        while (key_cpy[n] != ',' &&  key_cpy[n] != '\0')
             n++;
         size_t k;
         argv_tmp[argc] = xcalloc(n - i + 1, sizeof(char));

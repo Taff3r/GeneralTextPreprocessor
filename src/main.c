@@ -25,7 +25,6 @@ int main(int argc, char** argv)
     if (argc > 2) {
         output_file_name = malloc(sizeof(char) * (strlen(argv[2]) + 1));
         strcpy(output_file_name, argv[2]);
-        printf("output name: %s\n", output_file_name);
         output = fopen(output_file_name, "w");
     } else 
         output = stdout; 
