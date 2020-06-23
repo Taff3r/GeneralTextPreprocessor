@@ -3,6 +3,10 @@
 #include "definitions.h"
 #include "util.h"
 #include <stdio.h>
+#include <ctype.h>
+/*
+ * Turns the line into sz number of tokens, depending on the delimeters.
+ */
 char** tokenize(char* line, char* delimeters, size_t* sz)
 {
    char** tokens;
@@ -40,6 +44,10 @@ char* search_and_replace(char* str, const char* token, char* replacement)
     return replaced;
 
 }
+/*
+ * Replaces all occurences of tokens in str, with their replacements.
+ * cnt is the number of tokens to in **tokens.
+ */
 char* search_and_replace_all(char* str, char** tokens, char** replacements, size_t cnt) 
 {
     char buffer[MAX_LINE_LENGTH];
@@ -59,7 +67,51 @@ char* search_and_replace_all(char* str, char** tokens, char** replacements, size
     strcpy(final, buffer);
     return final;
 }
+
+/*
+ * Checks if a string, str, contains the token token.
+ * RETURN:
+ *  1 if str containts token.
+ *  0 Otherwise.
+ */
 int contains(char* str, char* token) 
 {
     return strstr(str, token) != NULL;
+}
+
+/*
+ * Trims the str of all white space.
+ */
+void trim_whitespace(char* str)
+{
+   char* tokens[] = {" ", "\t"};
+   char* replacements[] = {"", ""};
+   char* trimmed = search_and_replace_all(str, tokens, replacements, 2);
+   strcpy(str, trimmed);
+   free(trimmed);
+}
+
+/**
+ * Trims leading white space from a string.
+ * 
+ *
+ */
+void trim_leading_whitespace(char* str)
+{
+    size_t i;
+    size_t len;
+    char* cpy = xcalloc(strlen(str) + 1, sizeof(char));
+    char* orig_pos = cpy;
+    strcpy(cpy, str);
+    len = strlen(cpy);
+    for (i = 0; i < len; ++i) {
+        if (cpy[i] != ' ' && cpy[i] != '\t')
+            break;
+        else {
+            cpy += 1;
+            i--;
+        }
+    }
+    strcpy(str, cpy);
+    free(orig_pos);
 }
