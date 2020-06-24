@@ -178,8 +178,11 @@ void add_macro(char* line, hash_table* t)
 
     m = xmalloc(sizeof(macro_t));
     key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
+    /* Needed for error handling */
+    char line_cpy[strlen(line) + 1];
+    strcpy(line_cpy, line);
     macro_type = strtok(line, " \t"); 
-    /* TODO Add possibility of having any white space as seperation to expan */
+
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " \t"));
@@ -195,6 +198,8 @@ void add_macro(char* line, hash_table* t)
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
         /* Add as function macro */
         strcpy(key, strtok(NULL, "("));
+        if (*(line_cpy + strlen(macro_type) + strlen(key) + 1) != '(')
+            formatted_uerror("Missing \"(\" in argument function definition!\n", NULL);
         char* arg_list = strtok(NULL, ")");
         trim_whitespace(arg_list);
         char* expansion = strtok(NULL, NEWLINE_CHAR);
