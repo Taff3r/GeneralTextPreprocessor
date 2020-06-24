@@ -9,6 +9,12 @@ $FUN THREE($a, $b, $c)                   $a $b $c
 $FUN FOUR($arg, $barg, $carg, $darg)     $arg $barg $carg $darg
 $FUN INSTA($c)                           https://instagram.com/$c
 $INC ./macros/greek.gtpp
+$REE asdfasdf
+# Intro
+How are you?
+
+
+## Another header
 some other text
 HELLO
 more text...

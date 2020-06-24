@@ -1,15 +1,11 @@
-# Intro
-How are you?
-
-
-## Another header
 some other text
 hello there
 more text...
 Another: hello there, Simon
 fucking fuckfuck
-\U+03BB
-\U+1D27
+BIGEPS
+EPSILON
+CAPL
 Hello there my name is Simon and I am 22 years old.
 
 #### fucking fuckfuck Simon
@@ -20,7 +16,7 @@ ttt
 t
 2 + 1 + 1 - 2 in some other line
 https://www.youtube.com/channel/xNinjaViking
-Här är min insta: https://instagram.com/simontenggren
+
 text 1 + 2 + 2 - 1
 asdfasf asdfasdfasd
 some more text one two three four, and some more text.
@@ -32,4 +28,3 @@ test
 test
 test
 SOME
-ONE two 3

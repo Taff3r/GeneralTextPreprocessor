@@ -4,24 +4,29 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <malloc.h>
+#include "globals.h"
+
+char input_file_name[MAX_WORD_LENGTH << 2];
 int main(int argc, char** argv)
 {
     char* file_name        = NULL;
     char* output_file_name = NULL;
     FILE* input            = NULL;
     FILE* output           = NULL;
-
     if (argc > 1) {
         file_name = malloc(sizeof(char) * (strlen(argv[1]) + 1));
         strcpy(file_name, argv[1]);
+        strcpy(input_file_name, file_name);
         input = fopen(file_name, "r");
         if (!input) {
             uerror_no_exit("No such file!\n");
             goto CLEANUP;
         }
-    } else 
+    } else {
         input = stdin;
-       
+        strcpy(input_file_name, "stdin");
+    }
+      
     if (argc > 2) {
         output_file_name = malloc(sizeof(char) * (strlen(argv[2]) + 1));
         strcpy(output_file_name, argv[2]);

@@ -1,2 +1,2 @@
-$def LAMDA U+03BB
-$def CAPL U+1D27
+$DEF LAMDA      \U+03BB
+$DEF CAPL       \U+1D27
