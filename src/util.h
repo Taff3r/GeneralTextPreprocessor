@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include <stdlib.h>
+#include "definitions.h"
 void uerror(const char* msg);
 void formatted_uerror(const char* msg, const char* token);
 void uerror_no_exit(const char* msg);

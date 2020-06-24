@@ -7,6 +7,7 @@
 #include "definitions.h"
 #include "string_utils.h"
 #include "file_inclusion.h"
+#include "globals.h"
 size_t hash(const void* ptr)
 {
     size_t hash = 5381;
@@ -42,6 +43,7 @@ void delete_key(void* str)
 /*
  * Read all macro defintions and put them in the map.
  */
+long long line_number = 0;
 void process(FILE* input, FILE* output)
 {
 
@@ -59,6 +61,7 @@ void process(FILE* input, FILE* output)
             write_line(map, line, output);
         else /* Add since it is a macro line. */
             add_macro(line, map);
+        ++line_number;
 
     }
     delete_hash_table(map);
