@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "definitions.h"
 #include "globals.h"
+#include <string.h>
 void uerror(const char* msg)
 {
     fprintf(stderr, KRED);
@@ -24,7 +25,7 @@ void formatted_uerror(const char* msg, const char* token)
 {
     char formatted[MAX_LINE_LENGTH];
     char info[MAX_LINE_LENGTH];
-    sprintf(info, "%s:%lld ", input_file_name, line_number);
+    sprintf(info, "%s:%lld ", current_file, line_number);
     fprintf(stderr, KYLW UNDL);
     fprintf(stderr, info);
     fprintf(stderr, RST);
@@ -46,4 +47,20 @@ void* xcalloc(size_t cnt, size_t size)
     if(ptr == NULL)
         exit(1);
     return ptr;
+}
+
+void extract_path_and_file(char* dst, char* dst_f, const char* path_to_file)
+{
+    size_t i;
+    size_t len = strlen(path_to_file);
+    for (i = len; i >= 0; --i)
+        if(path_to_file[i] == '/')
+            break;
+    
+    char* tmp = xcalloc(strlen(path_to_file) + 1, sizeof(char));
+    strncpy(tmp, path_to_file, i);
+    strcpy(dst, tmp);
+    if (i != 0)
+        strcpy(dst_f, path_to_file + i + 1);
+    free(tmp);
 }
