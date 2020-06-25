@@ -4,9 +4,11 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <malloc.h>
+#include <unistd.h>
 #include "globals.h"
 
-char input_file_name[MAX_WORD_LENGTH << 2];
+char current_path[MAX_WORD_LENGTH << 3];
+char current_file[MAX_WORD_LENGTH];
 int main(int argc, char** argv)
 {
     char* file_name        = NULL;
@@ -16,15 +18,17 @@ int main(int argc, char** argv)
     if (argc > 1) {
         file_name = malloc(sizeof(char) * (strlen(argv[1]) + 1));
         strcpy(file_name, argv[1]);
-        strcpy(input_file_name, file_name);
+        strcpy(current_file, file_name);
         input = fopen(file_name, "r");
+        getcwd(current_path, (MAX_WORD_LENGTH << 3) - 1);
         if (!input) {
             uerror_no_exit("No such file!\n");
             goto CLEANUP;
         }
     } else {
         input = stdin;
-        strcpy(input_file_name, "stdin");
+        strcpy(current_file, "stdin");
+        
     }
       
     if (argc > 2) {

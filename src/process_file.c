@@ -182,7 +182,6 @@ void add_macro(char* line, hash_table* t)
     char line_cpy[strlen(line) + 1];
     strcpy(line_cpy, line);
     macro_type = strtok(line, " \t"); 
-
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " \t"));

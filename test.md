@@ -8,13 +8,14 @@ $FUN YTC($c)                             https://www.youtube.com/channel/$c
 $FUN THREE($a, $b, $c)                   $a $b $c
 $FUN FOUR($arg, $barg, $carg, $darg)     $arg $barg $carg $darg
 $FUN INSTA($c)                           https://instagram.com/$c
-$INC ./macros/greek.gtpp
-$REE asdfasdf
+$INC /home/simont/git/MarkdownPreprocessor/macros/recinc.gtpp
 # Intro
 How are you?
 
 
 ## Another header
+3C
+COOL
 some other text
 HELLO
 more text...
@@ -29,7 +30,7 @@ Some more text
 text
 txt
 ttt
-t
+t BIGEPS
 ADD(1,2) in some other line
 YTC(xNinjaViking)
 Här är min insta: INSTA(simontenggren)
