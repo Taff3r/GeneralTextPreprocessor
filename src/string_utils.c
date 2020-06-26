@@ -91,10 +91,8 @@ void trim_whitespace(char* str)
    free(trimmed);
 }
 
-/**
+/*
  * Trims leading white space from a string.
- * 
- *
  */
 void trim_leading_whitespace(char* str)
 {

@@ -12,6 +12,7 @@
  * Opens the file pointed to path_to_file. 
  * NOTE Must be complete path, and NOT relative.
  * E.g. /home/simont/macros/m.gtpp
+ * Works like a stack frame, needs to save the current state for reseting. 
  */
 void include_file(const char* path_to_file, hash_table* macros)
 {
