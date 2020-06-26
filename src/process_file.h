@@ -15,13 +15,15 @@ struct macro_t {
     enum e_macro type;
     size_t argc;
 };
+
 size_t hash(const void* ptr);
 int cmp(const void* a, const void* b);
 void delete_key(void*);
 void delete_val(void*);
 void process(FILE*, FILE*);
 
-void expand_macro(char*, char*, const macro_t*, FILE*);
+void expand_macro(char*, char*, const macro_t*, const hash_table*);
+void find_and_replace_keys(char*, const hash_table*);
 void write_line(hash_table*, char*, FILE*);
 char* expand_function(const char* key, char* line, const macro_t* macro);
 void add_macro(char*, hash_table*);

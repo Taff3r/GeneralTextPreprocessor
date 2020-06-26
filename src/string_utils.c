@@ -30,7 +30,7 @@ char** tokenize(char* line, char* delimeters, size_t* sz)
 char* search_and_replace(char* str, const char* token, char* replacement) 
 {
     char* replaced;
-    replaced = xcalloc(strlen(str) + strlen(replacement) + 1, sizeof(char));
+    replaced = xcalloc(MAX_LINE_LENGTH, sizeof(char));
     char* f; 
     if ((f = strstr(str, token)) != NULL) {
         /* Copy the first part of the string */
@@ -71,11 +71,13 @@ char* search_and_replace_all(char* str, char** tokens, char** replacements, size
 /*
  * Checks if a string, str, contains the token token.
  * RETURN:
- *  1 if str containts token.
+ *  1 if str contains token.
  *  0 Otherwise.
  */
 int contains(char* str, char* token) 
 {
+    if (token == NULL || str == NULL)
+        return 0;
     return strstr(str, token) != NULL;
 }
 

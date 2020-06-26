@@ -81,7 +81,7 @@ void write_line(hash_table* macros, char* line, FILE* output)
         while (contains(line, (char*) macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
             if (m != NULL) {
-                expand_macro(macro_keys[i], line, m, output);
+                expand_macro(macro_keys[i], line, m, macros);
             }
         } 
     }
@@ -89,12 +89,34 @@ void write_line(hash_table* macros, char* line, FILE* output)
     fputs(line, output);
 }
 
-void expand_macro(char* key, char* line, const macro_t* macro, FILE* output)
+void recursive_check_line(const hash_table* macros, char* line)
+{
+    /* Check if line contains any of the macros in the table,
+     * if so expand them if possible 
+     */
+    macro_t* m;
+    size_t i;
+    size_t sz; 
+
+    char** macro_keys = (char**) keys(macros, &sz);
+    for (i = 0; i < sz; ++i) {
+        while (contains(line, (char*) macro_keys[i])) {
+            m = lookup(macros, macro_keys[i]);
+            if (m != NULL) {
+                expand_macro(macro_keys[i], line, m, macros);
+            }
+        } 
+    }
+    free(macro_keys);
+}
+
+void expand_macro(char* key, char* line, const macro_t* macro, const hash_table* macros)
 {
     switch(macro->type) {
         case DEF:
             {
                 char* tmp = search_and_replace(line, key, macro->expansion);
+                recursive_check_line(macros, tmp);
                 strcpy(line, tmp);
                 free(tmp);
             }
@@ -102,6 +124,7 @@ void expand_macro(char* key, char* line, const macro_t* macro, FILE* output)
         case FUN:
             {
              char* expanded = expand_function(key, line, macro);
+             recursive_check_line(macros, expanded);
              strcpy(line, expanded);  
              free(expanded);
             }
@@ -162,7 +185,9 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
     return final;
 }
 
-
+/*
+ * Adds macros to the hash table
+ */
 void add_macro(char* line, hash_table* t)
 {
     char* macro_type;
@@ -178,7 +203,6 @@ void add_macro(char* line, hash_table* t)
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " \t"));
-        printf("Adding macro: %s\n", key);
         if (lookup(t, key))
             formatted_uerror("Multiple definitions of key: %s\n", key);
 
@@ -189,12 +213,12 @@ void add_macro(char* line, hash_table* t)
         init_def_macro(m);
         insert(t, key, m);
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
+        strcpy(key, strtok(NULL, "("));
         /* Error check */
         if (*(line_cpy + strlen(macro_type) + strlen(key) + 1) != '(')
             formatted_uerror("Missing \"(\" in argument function definition!\n", NULL);
 
         /* Add as function macro */
-        strcpy(key, strtok(NULL, "("));
         char* arg_list = strtok(NULL, ")");
         trim_whitespace(arg_list);
         char* expansion = strtok(NULL, NEWLINE_CHAR);
@@ -253,6 +277,7 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
         free(argv_tmp[i]);
     free(argv_tmp);
 }
+
 void init_def_macro(macro_t* m)
 {
     m->argv = NULL;
@@ -260,3 +285,20 @@ void init_def_macro(macro_t* m)
     m->argc = 0;
 }
 
+void find_and_replace_keys(char* dst, const hash_table* macros)
+{
+    size_t sz;
+    char** kys;
+    macro_t* m; 
+    size_t i;  
+
+    kys = (char**) keys(macros, &sz);
+    for (i = 0; i < sz; ++i){
+        m = lookup(macros, kys[i]);
+        if (m != NULL) {
+            while(contains(dst, (char*) kys[i])) {
+
+            }
+        }
+    }
+}
