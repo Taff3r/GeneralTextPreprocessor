@@ -6,8 +6,8 @@ $DEF MYAGE                               22 years old.
 $FUN TEST($arg)                          The arg evaluates to: $arg
 $FUN YTC($c)                             https://www.youtube.com/channel/$c
 $FUN THREE($a, $b, $c)                   $a $b $c
-$FUN FOUR($arg, $barg, $carg, $darg)     $arg $barg $carg $darg
-$FUN INSTA($c)                           https://instagram.com/$c
+$FUN FOUR($arg, $barg, $carg, $darg)     $arg $barg $carg $darg MYAGE
+$FUN INSTA($c)                           https://instagram.com/$c FOUR(one, two, three, four)
 $INC /home/simont/git/MarkdownPreprocessor/macros/recinc.gtpp
 # Intro
 How are you?
@@ -15,6 +15,7 @@ How are you?
 
 ## Another header
 3C
+BAJS
 COOL
 some other text
 HELLO

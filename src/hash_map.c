@@ -107,7 +107,7 @@ void grow(hash_table* table)
     free(old_entries);
 }
 
-void* lookup(hash_table* table, const void* key)
+void* lookup(const hash_table* table, const void* key)
 {
     void* val = NULL;
     size_t index = table->hash(key) & (table->sz - 1);
@@ -165,7 +165,7 @@ int remove_from_table(hash_table* table, const void* key)
  * Returns all non-null keys.
  * Ownership: Only outer pointer, not inner.
  */
-void** keys(hash_table* t, size_t* k) {
+void** keys(const hash_table* t, size_t* k) {
     size_t i;
     void* keys_tmp[t->sz];
 
