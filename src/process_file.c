@@ -118,17 +118,20 @@ void expand_macro(char* key, char* line, const macro_t* macro, FILE* output)
 char* expand_function(const char* key, char* line, const macro_t* macro) 
 {
     char* line_args[macro->argc];
-    /* Find instance of key in line */
     char* key_il;
     char line_cpy[MAX_LINE_LENGTH]; /* TODO correct size */
+    size_t pos_of_parentheses;
+
+    /* Find instance of key in line */
     strcpy(line_cpy, line);
     key_il = strstr(line_cpy, key);
+
     /* Find the pos of parentheses*/
-    size_t pos_of_parentheses;
-    /* Read the args inside the parentheses */
     pos_of_parentheses = key_il - line_cpy + strlen(key);
     size_t i = 0;
     char* line_p = line_cpy + pos_of_parentheses + 1;
+
+    /* Read the args inside the parentheses */
     line_args[i++] = strtok(line_p, ",)");
     for (; i < macro->argc; ++i) {
         line_p += strlen(line_args[i - 1]) + 1;
@@ -159,32 +162,23 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
     return final;
 }
 
-/*
- * TODO: Include table here for recursion.
- */
-void format_expansion(char* line_args[], const macro_t* macro, FILE* output) {
-    /* Read each token in expansion and replace with corresponding line_arg */
-    char* to_put;
-    to_put = search_and_replace_all(macro->expansion, macro->argv, line_args, macro->argc);
-    fputs(to_put, output);
-    free(to_put);
-}
 
 void add_macro(char* line, hash_table* t)
 {
     char* macro_type;
     char* key;
     macro_t* m;
+    char line_cpy[strlen(line) + 1]; /* Needed for error handling */
 
     m = xmalloc(sizeof(macro_t));
     key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
-    /* Needed for error handling */
-    char line_cpy[strlen(line) + 1];
     strcpy(line_cpy, line);
     macro_type = strtok(line, " \t"); 
+
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         strcpy(key, strtok(NULL, " \t"));
+        printf("Adding macro: %s\n", key);
         if (lookup(t, key))
             formatted_uerror("Multiple definitions of key: %s\n", key);
 
@@ -195,10 +189,12 @@ void add_macro(char* line, hash_table* t)
         init_def_macro(m);
         insert(t, key, m);
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
-        /* Add as function macro */
-        strcpy(key, strtok(NULL, "("));
+        /* Error check */
         if (*(line_cpy + strlen(macro_type) + strlen(key) + 1) != '(')
             formatted_uerror("Missing \"(\" in argument function definition!\n", NULL);
+
+        /* Add as function macro */
+        strcpy(key, strtok(NULL, "("));
         char* arg_list = strtok(NULL, ")");
         trim_whitespace(arg_list);
         char* expansion = strtok(NULL, NEWLINE_CHAR);
