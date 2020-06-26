@@ -21,6 +21,29 @@ The rules are as follows:
     + The arguments are comma-seperated and must be lead with the MACRO DEFINTION CHARACTER (default $).
     + Example: `$FUN GREET($greeting,$name) $greeting $name, how are you today?`
 * (EXPERIMENTAL) To include a (as in one) file containing macros use `$INC <path/to/file>`
+* White space when calling functions are parsed as a part of the the argument. E.g. `GREET( Hello , there )` will result in: ` Hello   there , how are you today?`
+
+
+## Recursion **(NEW)**
+Macros can be implemented with calls to other functions or definitions.
+Example:
+```
+$FUN TWO($a, $b)                         $a $b
+$FUN THREE($a, $b, $c)                   $a TWO($b,$c)
+$FUN FOUR($arg, $barg, $carg, $darg)     $arg THREE($barg,$carg,$darg)
+#DEF one                                 1
+#DEF two                                 2
+#DEF three                               3 
+#DEF four                                4
+FOUR(one,two,three,four)
+FOUR(Are you having a,good,day,today?)
+```
+Will result in:
+```
+1 2 3 4
+Are you having a good day today?
+```
+**Calling functions in text with another functions as an argument is however not yet implemented!**
 
 ### Example of usage
 macros/personal.gtpp:
