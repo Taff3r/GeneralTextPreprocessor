@@ -8,38 +8,7 @@
 #include "string_utils.h"
 #include "file_inclusion.h"
 #include "globals.h"
-size_t hash(const void* ptr)
-{
-    size_t hash = 5381;
-    int c;
-    const char* str = (char*) ptr;
-    while ((c = *str++) != '\0')
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    return hash;
-}
-
-int cmp(const void* a, const void* b)
-{
-    const char* m_a = (const char*) a;
-    const char* m_b = (const char*) b;
-    return strcmp(m_a, m_b) == 0;
-}
-
-void delete_val(void* macro)
-{
-    macro_t* m = macro;
-    free(m->expansion);
-    if(m->argv != NULL) {
-        for (size_t i = 0; i < m->argc; ++i)
-            free(m->argv[i]); 
-        free(m->argv);
-    }
-}
-
-void delete_key(void* str)
-{
-    return;
-}
+#include "funcpointers.h"
 /*
  * Read all macro defintions and put them in the map.
  */
@@ -75,8 +44,9 @@ void write_line(hash_table* macros, char* line, FILE* output)
     macro_t* m;
     size_t i;
     size_t sz; 
-
+    /* TODO: Add some way of avoid sorting and fetching keys everytime */
     char** macro_keys = (char**) keys(macros, &sz);
+    qsort(macro_keys, sz, sizeof(char*), string_cmp);
     for (i = 0; i < sz; ++i) {
         while (contains(line, (char*) macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
@@ -97,8 +67,9 @@ void recursive_check_line(const hash_table* macros, char* line)
     macro_t* m;
     size_t i;
     size_t sz; 
-
+    /* TODO: Add some way of avoid sorting and fetching keys everytime */
     char** macro_keys = (char**) keys(macros, &sz);
+    qsort(macro_keys, sz, sizeof(char*), string_cmp);
     for (i = 0; i < sz; ++i) {
         while (contains(line, (char*) macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
@@ -285,20 +256,3 @@ void init_def_macro(macro_t* m)
     m->argc = 0;
 }
 
-void find_and_replace_keys(char* dst, const hash_table* macros)
-{
-    size_t sz;
-    char** kys;
-    macro_t* m; 
-    size_t i;  
-
-    kys = (char**) keys(macros, &sz);
-    for (i = 0; i < sz; ++i){
-        m = lookup(macros, kys[i]);
-        if (m != NULL) {
-            while(contains(dst, (char*) kys[i])) {
-
-            }
-        }
-    }
-}
