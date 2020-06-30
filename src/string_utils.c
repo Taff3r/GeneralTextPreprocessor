@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include "process_file.h"
 #include "funcpointers.h"
+
 /*
  * Turns the line into sz number of tokens, depending on the delimeters.
  */
@@ -25,7 +26,8 @@ char** tokenize(char* line, char* delimeters, size_t* sz)
    } while((token = strtok(NULL, " ")) != NULL); 
    return tokens;
 }
-/**
+
+/*
  * Search the string str for the token and replaces it with the replacement.
  * Returns the a heap allocated string which has been modified. 
  */
@@ -47,20 +49,6 @@ char* search_and_replace(char* str, const char* token, char* replacement)
 
 }
 
-void expand_between(char* str, const size_t lower, const size_t upper, const hash_table* macros) 
-{
-    char* begin = str + lower + 1;
-    size_t cnt, i;
-    char** kys = (char**) keys(macros, &cnt);
-    qsort(kys, cnt, sizeof(char*), string_cmp);
-    macro_t* m;
-    for (i = 0; i < cnt; ++i) {
-        m = lookup(macros, kys[i]);
-        if (contains(begin, kys[i])) {
-            expand_macro(kys[i], begin, m, macros);
-        }
-    }
-}
 /*
  * Replaces all occurences of tokens in str, with their replacements.
  * cnt is the number of tokens to in **tokens.
