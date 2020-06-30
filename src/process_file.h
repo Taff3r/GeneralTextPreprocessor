@@ -29,6 +29,4 @@ char* expand_function(const char* key, char* line, const macro_t* macro, const h
 void add_macro(char*, hash_table*);
 void init_fun_macro(macro_t*, char*, char*);
 void init_def_macro(macro_t*);
-void parse_function_arguments(char*, size_t, size_t, const hash_table*);
-char** read_arg_list(const char*, size_t);
 #endif
