@@ -9,6 +9,7 @@
 #include "file_inclusion.h"
 #include "globals.h"
 #include "funcpointers.h"
+
 /*
  * Read all macro defintions and put them in the map.
  */
@@ -33,9 +34,19 @@ void process(FILE* input, FILE* output)
         ++line_number;
 
     }
+    free(macro_keys);
     delete_hash_table(map);
 } 
-
+size_t cnt = 0;
+char** macro_keys = NULL;
+void m_keys(const hash_table* macros) {
+    if (has_new_keys) {
+        free(macro_keys);
+        macro_keys = (char**) keys(macros, &cnt);
+        qsort(macro_keys, cnt, sizeof(char*), string_cmp);
+    } 
+    has_new_keys = 0;
+}
 void write_line(hash_table* macros, char* line, FILE* output)
 {
     /* Check if line contains any of the macros in the table,
@@ -43,12 +54,11 @@ void write_line(hash_table* macros, char* line, FILE* output)
      */
     macro_t* m;
     size_t i;
-    size_t sz; 
-    /* TODO: Add some way of avoid sorting and fetching keys everytime */
-    char** macro_keys = (char**) keys(macros, &sz);
-    qsort(macro_keys, sz, sizeof(char*), string_cmp);
-    /* TODO Can now use binary search instead (maybe?) */
-    for (i = 0; i < sz; ++i) {
+
+    /* Check if new keys are available and sorts them if so */
+    m_keys(macros);
+
+    for (i = 0; i < cnt; ++i) {
         while (contains(line, (char*) macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
             if (m != NULL) {
@@ -56,7 +66,6 @@ void write_line(hash_table* macros, char* line, FILE* output)
             }
         } 
     }
-    free(macro_keys);
     fputs(line, output);
 }
 
@@ -67,11 +76,11 @@ void recursive_check_line(const hash_table* macros, char* line)
      */
     macro_t* m;
     size_t i;
-    size_t sz; 
-    /* TODO: Add some way of avoid sorting and fetching keys everytime */
-    char** macro_keys = (char**) keys(macros, &sz);
-    qsort(macro_keys, sz, sizeof(char*), string_cmp);
-    for (i = 0; i < sz; ++i) {
+
+    /* Check if new keys are available and sorts them if so */
+    m_keys(macros);
+
+    for (i = 0; i < cnt; ++i) {
         while (contains(line, (char*) macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
             if (m != NULL) {
@@ -79,7 +88,7 @@ void recursive_check_line(const hash_table* macros, char* line)
             }
         } 
     }
-    free(macro_keys);
+    //free(macro_keys);
 }
 
 void expand_macro(char* key, char* line, const macro_t* macro, const hash_table* macros)
@@ -172,6 +181,7 @@ COPY:
     return final;
 }
 
+unsigned has_new_keys = 0;
 /*
  * Adds macros to the hash table
  */
@@ -224,6 +234,7 @@ void add_macro(char* line, hash_table* t)
         free(key);
     } else 
         formatted_uerror("Unrecoginized token: %s\n", macro_type);
+    has_new_keys = 1;
 }
 
 void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
