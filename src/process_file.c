@@ -44,8 +44,8 @@ void m_keys(const hash_table* macros) {
         free(macro_keys);
         macro_keys = (char**) keys(macros, &cnt);
         qsort(macro_keys, cnt, sizeof(char*), string_cmp);
+        has_new_keys = 0;
     } 
-    has_new_keys = 0;
 }
 void write_line(hash_table* macros, char* line, FILE* output)
 {
