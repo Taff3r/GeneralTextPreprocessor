@@ -10,12 +10,18 @@ $FUN TWO($a, $b)                         $a $b
 $FUN THREE($a, $b, $c)                   $a TWO($b,$c)
 $FUN FOUR($arg, $barg, $carg, $darg)     $arg THREE($barg,$carg,$darg)
 $FUN INSTA($c)                           https://instagram.com/$c FOUR(one, two, three, four)
-$DEF PROF simontenggren
+$DEF PROF                                simontenggren
 $INC /home/simont/git/MarkdownPreprocessor/macros/recinc.gtpp
+$DEF SMALLLAMBDA                         l
+$DEF LAMBDA                              L
+$FUN CAT($a, $b)                        $a$b
+$FUN CAT3($a, $b, $c)                   $aCAT($b,$c)
 # Intro
 How are you?
+SMALLLAMBDA LAMBDA SMALLLAMBDA
+INSTA(CAT(simon,tenggren))
+FOUR(Are you having a,CAT(simon,tenggren),day,INSTA(CAT(MYNAME,MYAGE)))
 
-FOUR(Are you having a,good,day,today?)
 ## Another header
 3C
 BAJS
@@ -35,12 +41,7 @@ text
 txt
 ttt
 t BIGEPS
-ADD(1,2) in some other line
-YTC(xNinjaViking)
-Här är min insta: INSTA(INSTA(PROF)) 
-text ADD(2,1)
 asdfasf asdfasdfasd
-some more text FOUR(one,two,three,MYNAME), and some more text.
 asdfasdfasdfasdfasdfasdf
 test
 test
@@ -49,4 +50,3 @@ test
 test
 test
 SOME
-THREE(ONE,two,3)
