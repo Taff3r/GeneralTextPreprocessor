@@ -12,13 +12,14 @@ $FUN FOUR($arg, $barg, $carg, $darg)     $arg THREE($barg,$carg,$darg)
 $FUN INSTA($c)                           https://instagram.com/$c FOUR(one, two, three, four)
 $DEF PROF                                simontenggren
 $INC /home/simont/git/MarkdownPreprocessor/macros/recinc.gtpp
-$DEF SMALLLAMBDA                         l
-$DEF LAMBDA                              L
-$FUN CAT($a, $b)                        $a$b
-$FUN CAT3($a, $b, $c)                   $aCAT($b,$c)
+
 # Intro
 How are you?
+$DEF SMALLLAMBDA                         l
+$DEF LAMBDA                              L
 SMALLLAMBDA LAMBDA SMALLLAMBDA
+$FUN CAT($a, $b)                        $a$b
+$FUN CAT3($a, $b, $c)                   $aCAT($b,$c)
 INSTA(CAT(simon,tenggren))
 FOUR(Are you having a,CAT(simon,tenggren),day,INSTA(CAT(MYNAME,MYAGE)))
 
