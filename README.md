@@ -24,7 +24,7 @@ The rules are as follows:
 * White space when calling functions are parsed as a part of the the argument. E.g. `GREET( Hello , there )` will result in: ` Hello   there , how are you today?`
 
 
-## Recursion **(NEW)**
+## Recursion
 Macros can be implemented with calls to other functions or definitions.
 Example:
 ```
@@ -43,7 +43,14 @@ Will result in:
 1 2 3 4
 Are you having a good day today?
 ```
-**Calling functions in text with another functions as an argument is however not yet implemented!**
+
+**NEW**
+Arguments to functions can also be functions themselves.
+```
+FOUR(TWO(Are,THREE(you,having,a)),THREE(good,day,today?),one,two)
+```
+Will evaluate to:
+`Are you having a good day today? 1 2`
 
 ### Example of usage
 macros/personal.gtpp:
