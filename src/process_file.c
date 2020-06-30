@@ -47,6 +47,7 @@ void write_line(hash_table* macros, char* line, FILE* output)
     /* TODO: Add some way of avoid sorting and fetching keys everytime */
     char** macro_keys = (char**) keys(macros, &sz);
     qsort(macro_keys, sz, sizeof(char*), string_cmp);
+    /* TODO Can now use binary search instead (maybe?) */
     for (i = 0; i < sz; ++i) {
         while (contains(line, (char*) macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
@@ -94,7 +95,7 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
             break;
         case FUN:
             {
-             char* expanded = expand_function(key, line, macro);
+             char* expanded = expand_function(key, line, macro, macros);
              recursive_check_line(macros, expanded);
              strcpy(line, expanded);  
              free(expanded);
@@ -105,13 +106,12 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
     }
 }
 /*
- * TODO: Add table here to allow recursion.
  * TODO: Make sure that a key is not used as an argument without it being
  *       called properly.
  */
-char* expand_function(const char* key, char* line, const macro_t* macro) 
+char* expand_function(const char* key, char* line, const macro_t* macro, const hash_table* macros) 
 {
-    char* line_args[macro->argc];
+    char** line_args = xcalloc(macro->argc, sizeof(char*));
     char* key_il;
     char line_cpy[MAX_LINE_LENGTH]; /* TODO correct size */
     size_t pos_of_parentheses;
@@ -122,19 +122,37 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
 
     /* Find the pos of parentheses*/
     pos_of_parentheses = key_il - line_cpy + strlen(key);
-    size_t i = 0;
-    char* line_p = line_cpy + pos_of_parentheses + 1;
+    char* line_p = line_cpy + pos_of_parentheses;
 
+    size_t l_par, r_par, last_delim, i, k;
+    l_par = r_par = last_delim = i = k = 0;
+
+    if (line_p[i] != '(')
+        formatted_uerror("Missing '(' in function call.\n", NULL);
+
+    last_delim = i++; 
+    l_par++;
     /* Read the args inside the parentheses */
-    line_args[i++] = strtok(line_p, ",)");
-    for (; i < macro->argc; ++i) {
-        line_p += strlen(line_args[i - 1]) + 1;
-        line_args[i] = strtok(line_p, ",)");
+    for (; k < macro->argc && line_p[i] != '\n' && l_par > r_par; ++i) {
+        if (line_p[i] == '(')
+            ++l_par;
+        else if (line_p[i] == ')') {
+            ++r_par;
+            if (l_par == r_par)
+                goto COPY;
+        }
+        else if (line_p[i] == ',')
+            if (l_par == r_par + 1) {
+COPY:           
+                line_args[k] = xcalloc(i - last_delim, sizeof(char)); /* TODO CORRECT SIZE */
+                strncpy(line_args[k++], line_p + last_delim  + 1, i - last_delim - 1);
+                last_delim = i;
+            }
     }
-
     /* Replaced the arguments provided with to the expansion */
     char* expansion = search_and_replace_all(macro->expansion, macro->argv, \
             line_args, macro->argc);
+
     /* TODO CORRECT SIZE */
     char* concat;
     concat = xcalloc(strlen(key) + macro->argc * MAX_WORD_LENGTH + 1, sizeof(char));
@@ -148,12 +166,48 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
             strcat(concat, ",");
     }
     strcat(concat, ")");
-
     /* Replace the key and the arg list in the string with the expansion */
     char* final = search_and_replace(line, concat, expansion);
+    for(i = 0; i < macro->argc; ++i)
+        free(line_args[i]);
+    free(line_args);
     free(concat);
     free(expansion);
     return final;
+}
+
+void parse_function_arguments(char* line, size_t pos_of_parentheses, size_t argc, const hash_table* macros)
+{
+    size_t l_paren_cnt, r_paren_cnt, curr_pos, delim_cnt, i;
+    size_t delimiter_positions[argc + 1];
+    if(line[pos_of_parentheses] != '(')
+        formatted_uerror("Missing \"(\" in function call. X\n", NULL);
+
+    l_paren_cnt = 1;
+    delim_cnt = r_paren_cnt = 0;
+    curr_pos = pos_of_parentheses + 1;
+    delimiter_positions[delim_cnt++] = pos_of_parentheses;
+
+    /* TODO Change to new line char */
+    while (l_paren_cnt > r_paren_cnt && line[curr_pos] != '\n') {
+        if (line[curr_pos] == '(')
+            ++l_paren_cnt;
+        else if (line[curr_pos] == ')')
+            ++r_paren_cnt;
+        else if (line[curr_pos] == ',')
+            if (r_paren_cnt == l_paren_cnt - 1) { /* valid delimeter */
+                if (delim_cnt == argc)
+                    formatted_uerror("Too many arguments in function call.", NULL);
+                else {
+                    delimiter_positions[delim_cnt++] = curr_pos;
+                }
+            }
+        ++curr_pos;
+    }
+    for (i = 0; i < argc; ++i){
+        expand_between(line, delimiter_positions[i], delimiter_positions[i + 1], macros);
+    }
+
 }
 
 /*
