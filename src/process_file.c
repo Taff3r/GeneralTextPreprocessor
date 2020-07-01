@@ -24,7 +24,7 @@ void process(FILE* input, FILE* output)
         char* r = fgets(line,MAX_LINE_LENGTH - 1, input);
         if (r == NULL)
             break;
-        else if (strcmp(line, "\n") == 0) /* Empty line */
+        else if (strcmp(line, NEWLINE_CHAR) == 0) /* Empty line */
             fputs("\n", output);
         /* normal word write to output */
         else if (line[0] != RESERVED_MACRO_CHAR)
@@ -37,6 +37,7 @@ void process(FILE* input, FILE* output)
     free(macro_keys);
     delete_hash_table(map);
 } 
+
 size_t cnt = 0;
 char** macro_keys = NULL;
 void m_keys(const hash_table* macros) {
@@ -59,7 +60,7 @@ void write_line(hash_table* macros, char* line, FILE* output)
     m_keys(macros);
 
     for (i = 0; i < cnt; ++i) {
-        while (contains(line, (char*) macro_keys[i])) {
+        while (contains(line, macro_keys[i])) {
             m = lookup(macros, macro_keys[i]);
             if (m != NULL) {
                 expand_macro(macro_keys[i], line, m, macros);
@@ -88,7 +89,6 @@ void recursive_check_line(const hash_table* macros, char* line)
             }
         } 
     }
-    //free(macro_keys);
 }
 
 void expand_macro(char* key, char* line, const macro_t* macro, const hash_table* macros)
@@ -110,6 +110,17 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
              free(expanded);
             }
             break;
+        case FLE:
+            {
+                /* Replace the key in the line */
+                char* expanded_file = expand_file(macro->file);
+                printf("Expanded file: \n\n%s\n", expanded_file);
+                char* replaced = search_and_replace(line, key, expanded_file);
+                printf("replaced:\n\n %s\n", replaced);
+                strcpy(line, replaced);
+                free(expanded_file);
+                free(replaced);
+            }
         default:
             break;
     }
@@ -224,7 +235,7 @@ void add_macro(char* line, hash_table* t)
         insert(t, key, m);
     } else if (strcmp(macro_type, INC_DEF) == 0) {
         char* path;
-        path = xcalloc(MAX_LINE_LENGTH, sizeof(char));
+        path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
 
         strcpy(path, strtok(NULL, NEWLINE_CHAR));
         include_file(path, t);
@@ -232,6 +243,16 @@ void add_macro(char* line, hash_table* t)
         /* Turns out these aren't needed here. TODO refactor */
         free(m);
         free(key);
+        
+    } else if (strcmp(macro_type, FILE_DEF) == 0) {
+        char* path;
+        path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
+        strcpy(key, strtok(NULL, " \t"));
+        strcpy(path, strtok(NULL, NEWLINE_CHAR));
+        trim_leading_whitespace(path);
+        init_file_macro(m, path);
+        insert(t, key, m);
+        free(path);
     } else 
         formatted_uerror("Unrecoginized token: %s\n", macro_type);
     has_new_keys = 1;
@@ -239,6 +260,7 @@ void add_macro(char* line, hash_table* t)
 
 void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
 {
+    m->file = NULL;
     char key_cpy[strlen(arg_list) + 1];
     size_t argc = 0;
     char** argv_tmp = xcalloc(MAX_ARGC, sizeof(char*));
@@ -281,5 +303,17 @@ void init_def_macro(macro_t* m)
     m->argv = NULL;
     m->type = DEF;
     m->argc = 0;
+    m->file = NULL;
 }
 
+void init_file_macro(macro_t* m, char* path_to_file)
+{
+    m->type = FLE;
+    m->argc = 0;
+    m->argv = NULL;
+
+    m->file = fopen(path_to_file, "r");
+    if (!m->file) 
+        formatted_uerror("Cannot open file %s\n", path_to_file);
+
+}

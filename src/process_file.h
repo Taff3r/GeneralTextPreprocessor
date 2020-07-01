@@ -5,7 +5,8 @@
 enum e_macro {
     DEF,
     FUN,
-    INC
+    INC,
+    FLE
 };
 
 typedef struct macro_t macro_t;
@@ -14,6 +15,7 @@ struct macro_t {
     char* expansion;
     enum e_macro type;
     size_t argc;
+    FILE* file;
 };
 
 size_t hash(const void* ptr);
@@ -27,7 +29,9 @@ void find_and_replace_keys(char*, const hash_table*);
 void write_line(hash_table*, char*, FILE*);
 char* expand_function(const char* key, char* line, const macro_t* macro, const hash_table*);
 void add_macro(char*, hash_table*);
+
 void init_fun_macro(macro_t*, char*, char*);
 void init_def_macro(macro_t*);
+void init_file_macro(macro_t*, char*);
 void m_keys(const hash_table*);
 #endif

@@ -16,6 +16,7 @@
 #define MACRO_DEF "$DEF"
 #define FUNC_DEF  "$FUN"
 #define INC_DEF   "$INC"
+#define FILE_DEF  "$FILE"
 #define MAX_IDENTIFIER_LENGTH (4)
 #define MAX_ARGC (10)
 #define RESERVED_MACRO_CHAR '$'

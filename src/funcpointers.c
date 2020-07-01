@@ -22,12 +22,15 @@ int cmp(const void* a, const void* b)
 void delete_val(void* macro)
 {
     macro_t* m = macro;
-    free(m->expansion);
     if(m->argv != NULL) {
         for (size_t i = 0; i < m->argc; ++i)
             free(m->argv[i]); 
         free(m->argv);
     }
+    if (m->type == FLE)
+        fclose(m->file);
+    else
+        free(m->expansion);
 }
 
 void delete_key(void* str)

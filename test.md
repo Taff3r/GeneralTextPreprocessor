@@ -22,6 +22,10 @@ $FUN CAT($a, $b)                        $a$b
 $FUN CAT3($a, $b, $c)                   $aCAT($b,$c)
 INSTA(CAT(simon,tenggren))
 FOUR(Are you having a,CAT(simon,tenggren),day,INSTA(CAT(MYNAME,MYAGE)))
+$FILE CMAIN                            ./src/main.c
+
+CMAIN
+
 
 ## Another header
 3C

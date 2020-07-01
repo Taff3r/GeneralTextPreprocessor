@@ -34,7 +34,7 @@ char** tokenize(char* line, char* delimeters, size_t* sz)
 char* search_and_replace(char* str, const char* token, char* replacement) 
 {
     char* replaced;
-    replaced = xcalloc(MAX_LINE_LENGTH, sizeof(char));
+    replaced = xcalloc(strlen(replacement) + MAX_LINE_LENGTH, sizeof(char));
     char* f; 
     if ((f = strstr(str, token)) != NULL) {
         /* Copy the first part of the string */
@@ -119,4 +119,25 @@ void trim_leading_whitespace(char* str)
     }
     strcpy(str, cpy);
     free(orig_pos);
+}
+
+char* expand_file(FILE* file)
+{
+    size_t length;
+    char* buffer;
+    /* Find the number of bytes in the file */
+    fseek(file, 0L, SEEK_END);
+    length = ftell(file);
+
+    /* Rewind the file to beginning */
+    rewind(file);
+
+    /* Allocate appropriate amount */
+    buffer = xcalloc(length + 1, sizeof(char));
+
+    /* Read file into buffer */
+    fread(buffer, sizeof(char), length, file);
+
+    return buffer;
+
 }
