@@ -12,7 +12,7 @@ will read the output from `cat` process it, and then the output will be redirect
 ### Macro types **NEW**
 There are currently four different kinds of macros that can be defined.
 
-| **Type** | **Explaniation **                                    |**Usage**                                            |
+| **Type** | **Explination**                                    |**Usage**                                            |
 | ----     | ----                                                 | ---                                                 |
 | DEF      | Defines a simple text replacement as its expansion.  | `$DEF <KEY> <expansion> `                           |
 | FUN      | Defines a function that takes a number of arguments. | `$FUN <KEY>($arg, $arg2, ...) <expansion>`          |
