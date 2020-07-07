@@ -26,7 +26,6 @@ $FILE CMAIN                            ./src/main.c
 
 CMAIN
 
-
 ## Another header
 3C
 BAJS
@@ -41,6 +40,9 @@ CAPL
 Hello there my name is MYNAME and I am MYAGE
 
 #### SHIT MYNAME
+$UNDEF SHIT
+
+SHIT
 Some more text
 text
 txt

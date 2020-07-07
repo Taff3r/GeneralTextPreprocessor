@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -static -O3 -Wall -pedantic-errors
+CFLAGS = -g -static -O3 -Wall -Wextra -pedantic-errors 
 DEBUGFLAGS = -fprofile-arcs -ftest-coverage
 
 PROGS = gtpp

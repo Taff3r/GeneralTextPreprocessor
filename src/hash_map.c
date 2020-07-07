@@ -141,24 +141,21 @@ int remove_from_table(hash_table* table, const void* key)
     e = table->entries[index];
     if (e == NULL)
         return 0;
-
-    do {
+    while (e != NULL)
         if (table->compare(e->key, key)) {
-            if (e->next) {
-                table->entries[index] = e->next;
-            } else {
-                table->entries[index] = NULL;
-            }
-            free(e->key);
+            table->entries[index] = e->next;
+
+            table->value_deleter(e->val);
+            table->key_deleter(e->key);
             free(e->val);
+            free(e->key);
             free(e);
-            table->inserted--;
             return 1;
-        }  else {
+        } else 
             e = e->next;
-        }
-    } while (e != NULL);
+
     return 0;
+    
 }
 
 /**

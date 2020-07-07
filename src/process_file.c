@@ -150,6 +150,7 @@ char* expand_function(const char* key, char* line, const macro_t* macro, const h
     last_delim = i++; 
     l_par++;
     /* Read the args inside the parentheses */
+    /* TODO ADD ERROR HANDLING */
     for (; k < macro->argc && line_p[i] != '\n' && l_par > r_par; ++i) {
         if (line_p[i] == '(')
             ++l_par;
@@ -243,7 +244,7 @@ void add_macro(char* line, hash_table* t)
         /* Turns out these aren't needed here. TODO refactor */
         free(m);
         free(key);
-        
+         
     } else if (strcmp(macro_type, FILE_DEF) == 0) {
         char* path;
         path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
@@ -253,6 +254,15 @@ void add_macro(char* line, hash_table* t)
         init_file_macro(m, path);
         insert(t, key, m);
         free(path);
+    } else if (strcmp(macro_type, UNDEF_DEF) == 0){
+       strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
+       trim_leading_whitespace(key);
+       if (lookup(t, key)) {
+           remove_from_table(t, key);
+           free(key);
+           free(m);
+       } else 
+           formatted_uerror("Cannot remove key: %s! It is not defined\n", key);
     } else 
         formatted_uerror("Unrecoginized token: %s\n", macro_type);
     has_new_keys = 1;
