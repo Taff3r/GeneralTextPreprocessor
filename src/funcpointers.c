@@ -22,15 +22,35 @@ int cmp(const void* a, const void* b)
 void delete_val(void* macro)
 {
     macro_t* m = macro;
-    if(m->argv != NULL) {
-        for (size_t i = 0; i < m->argc; ++i)
-            free(m->argv[i]); 
-        free(m->argv);
+    switch (m->type) {
+        case DEF:
+            {
+                def_m* dm = m->macro;
+                free(dm->expansion);
+                free(dm);
+                break;
+            }
+        case FUN:
+            {
+                func_m* fm = m->macro;
+                for (size_t i = 0; i < fm->argc; ++i)
+                    free(fm->argv[i]); 
+                free(fm->argv);
+                free(fm->expansion);
+                free(fm);
+                break;
+            }
+        case FLE:
+            {
+                file_m* fm= m->macro;
+                fclose(fm->file);
+                free(fm);
+                break;
+            }
+        default:
+            return;
+            
     }
-    if (m->type == FLE)
-        fclose(m->file);
-    else
-        free(m->expansion);
 }
 
 void delete_key(void* str)

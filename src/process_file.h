@@ -11,10 +11,24 @@ enum e_macro {
 
 typedef struct macro_t macro_t;
 struct macro_t {
+    enum e_macro type;
+    void* macro;
+};
+
+typedef struct func_m func_m;
+struct func_m {
     char** argv;
     char* expansion;
-    enum e_macro type;
     size_t argc;
+};
+
+typedef struct def_m def_m;
+struct def_m {
+    char* expansion;
+};
+
+typedef struct file_m file_m;
+struct file_m {
     FILE* file;
 };
 
