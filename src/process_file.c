@@ -96,7 +96,8 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
     switch(macro->type) {
         case DEF:
             {
-                char* tmp = search_and_replace(line, key, macro->expansion);
+                def_m* m = macro->macro;
+                char* tmp = search_and_replace(line, key, m->expansion);
                 recursive_check_line(macros, tmp);
                 strcpy(line, tmp);
                 free(tmp);
@@ -113,7 +114,8 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
         case FLE:
             {
                 /* Replace the key in the line */
-                char* expanded_file = expand_file(macro->file);
+                file_m* m = macro->macro;
+                char* expanded_file = expand_file(m->file);
                 printf("Expanded file: \n\n%s\n", expanded_file);
                 char* replaced = search_and_replace(line, key, expanded_file);
                 printf("replaced:\n\n %s\n", replaced);
@@ -128,7 +130,8 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
 
 char* expand_function(const char* key, char* line, const macro_t* macro, const hash_table* macros) 
 {
-    char** line_args = xcalloc(macro->argc, sizeof(char*));
+    func_m* m = macro->macro;
+    char** line_args = xcalloc(m->argc, sizeof(char*));
     char* key_il;
     char line_cpy[MAX_LINE_LENGTH]; /* TODO correct size */
     size_t pos_of_parentheses;
@@ -151,7 +154,7 @@ char* expand_function(const char* key, char* line, const macro_t* macro, const h
     l_par++;
     /* Read the args inside the parentheses */
     /* TODO ADD ERROR HANDLING */
-    for (; k < macro->argc && line_p[i] != '\n' && l_par > r_par; ++i) {
+    for (; k < m->argc && line_p[i] != '\n' && l_par > r_par; ++i) {
         if (line_p[i] == '(')
             ++l_par;
         else if (line_p[i] == ')') {
@@ -168,24 +171,24 @@ COPY:
             }
     }
     /* Replaced the arguments provided with to the expansion */
-    char* expansion = search_and_replace_all(macro->expansion, macro->argv, \
-            line_args, macro->argc);
+    char* expansion = search_and_replace_all(m->expansion, m->argv, \
+            line_args, m->argc);
 
     char* concat;
-    concat = xcalloc(strlen(key) + macro->argc * MAX_WORD_LENGTH + 1, sizeof(char));
+    concat = xcalloc(strlen(key) + m->argc * MAX_WORD_LENGTH + 1, sizeof(char));
     char key_cpy[strlen(key) + 1];
     strcpy(key_cpy, key);
     strcat(concat, key_cpy);
     strcat(concat, "(");
-    for (i = 0; i < macro->argc; ++i) {
+    for (i = 0; i < m->argc; ++i) {
         strcat(concat, line_args[i]);
-        if( i + 1 != macro->argc)
+        if( i + 1 != m->argc)
             strcat(concat, ",");
     }
     strcat(concat, ")");
     /* Replace the key and the arg list in the string with the expansion */
     char* final = search_and_replace(line, concat, expansion);
-    for(i = 0; i < macro->argc; ++i)
+    for(i = 0; i < m->argc; ++i)
         free(line_args[i]);
     free(line_args);
     free(concat);
@@ -211,15 +214,18 @@ void add_macro(char* line, hash_table* t)
 
     if (strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
+        def_m* d_m = xmalloc(sizeof(def_m));
         strcpy(key, strtok(NULL, " \t"));
         if (lookup(t, key))
             formatted_uerror("Multiple definitions of key: %s\n", key);
 
         char* expansion = strtok(NULL, NEWLINE_CHAR); /* A lot of memory */
         trim_leading_whitespace(expansion);
-        m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
-        strcpy(m->expansion, expansion);
-        init_def_macro(m);
+        d_m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
+        strcpy(d_m->expansion, expansion);
+        /* TODO: Changed here removed init_def*/
+        m->macro = d_m;
+        m->type = DEF;
         insert(t, key, m);
     } else if (strcmp(macro_type, FUNC_DEF) == 0) {
         strcpy(key, strtok(NULL, "("));
@@ -270,14 +276,15 @@ void add_macro(char* line, hash_table* t)
 
 void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
 {
-    m->file = NULL;
+    func_m* f_m = xmalloc(sizeof(func_m));
     char key_cpy[strlen(arg_list) + 1];
     size_t argc = 0;
     char** argv_tmp = xcalloc(MAX_ARGC, sizeof(char*));
+
     m->type = FUN;
     strcpy(key_cpy, arg_list);
-    m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
-    strcpy(m->expansion, expansion);
+    f_m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
+    strcpy(f_m->expansion, expansion);
     size_t i = 0;
     size_t len = strlen(key_cpy);
     /* find first occurence of RESERVED_MACRO_CHAR */;
@@ -297,33 +304,26 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
         argc++;
         i += n - i + 1; 
     }
-    m->argc = argc;
-    m->argv = xcalloc(argc, sizeof(char*));
+    f_m->argc = argc;
+    f_m->argv = xcalloc(argc, sizeof(char*));
     for (i = 0; i < argc; ++i){
-        m->argv[i] = xcalloc(strlen(argv_tmp[i]) + 1, sizeof(char));
-        strcpy(m->argv[i], argv_tmp[i]);
+        f_m->argv[i] = xcalloc(strlen(argv_tmp[i]) + 1, sizeof(char));
+        strcpy(f_m->argv[i], argv_tmp[i]);
     }
     for (i = 0; i < MAX_ARGC; ++i)
         free(argv_tmp[i]);
     free(argv_tmp);
+    m->macro = f_m;
 }
 
-void init_def_macro(macro_t* m)
-{
-    m->argv = NULL;
-    m->type = DEF;
-    m->argc = 0;
-    m->file = NULL;
-}
 
 void init_file_macro(macro_t* m, char* path_to_file)
 {
+    file_m* f_m = xmalloc(sizeof(file_m));
     m->type = FLE;
-    m->argc = 0;
-    m->argv = NULL;
-
-    m->file = fopen(path_to_file, "r");
-    if (!m->file) 
+    f_m->file = fopen(path_to_file, "r");
+    if (!f_m->file) 
         formatted_uerror("Cannot open file %s\n", path_to_file);
+    m->macro = f_m;
 
 }
