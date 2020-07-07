@@ -9,15 +9,16 @@ The program can read and write to stdin/stdout. Allowing for piping between prog
 `cat some.file | ./gtpp > file.out`
 will read the output from `cat` process it, and then the output will be redirected into the file `file.out`.
 
-### Macro types **NEW**
+### Macro types (**NEW** see UNDEF)
 There are currently four different kinds of macros that can be defined.
 
-| **Type** | **Explanation**                                    |**Usage**                                            |
+| **Type** | **Explanation**                                    |**Usage**                                              |
 | ----     | ----                                                 | ---                                                 |
 | DEF      | Defines a simple text replacement as its expansion.  | `$DEF <KEY> <expansion> `                           |
 | FUN      | Defines a function that takes a number of arguments. | `$FUN <KEY>($arg, $arg2, ...) <expansion>`          |
 | INC      | Includes a file and reads all macros from it.        | `$INC <full/path/to/file>`                          |
 | FILE     | Includes a file as the expansion of the macro.       | `$FILE <KEY> <full/path/to/file>`                   |
+| UNDEF    | Undefines a macro, making it unavailable for use     | `$UNDEF <KEY> `                                     |
 
 ## Writing macros
 There are several rules for getting the expected usage of the program, this will (probably) be fixed in the future.
