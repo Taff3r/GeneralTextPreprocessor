@@ -81,8 +81,6 @@ int insert(hash_table* table, void* key, void* val)
         }
     }
     table->inserted++;
-    if(table->inserted / table->sz > MAX_SATIATION)
-        grow(table);
     return 1;
 }
 
