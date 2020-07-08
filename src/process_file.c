@@ -16,7 +16,6 @@
 long long line_number = 0;
 void process(FILE* input, FILE* output)
 {
-
     hash_table* map = new_hash_table(cmp, hash, delete_key, delete_val);
     char line[MAX_LINE_LENGTH];
     while(1) {
@@ -24,15 +23,15 @@ void process(FILE* input, FILE* output)
         char* r = fgets(line,MAX_LINE_LENGTH - 1, input);
         if (r == NULL)
             break;
-        else if (strcmp(line, NEWLINE_CHAR) == 0) /* Empty line */
-            fputs("\n", output);
-        /* normal word write to output */
-        else if (line[0] != RESERVED_MACRO_CHAR)
-            write_line(map, line, output);
+        else if (comment_cnt == 0 && strcmp(line, NEWLINE_CHAR) == 0) /* Empty line */
+                fputs("\n", output);
+            /* normal word write to output */
+        else if (comment_cnt == 0 && line[0] != RESERVED_MACRO_CHAR )
+                write_line(map, line, output);
         else /* Add since it is a macro line. */
-            add_macro(line, map);
-        ++line_number;
+                add_macro(line, map);
 
+        ++line_number;
     }
     free(macro_keys);
     delete_hash_table(map);
@@ -105,10 +104,10 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
             break;
         case FUN:
             {
-             char* expanded = expand_function(key, line, macro, macros);
-             recursive_check_line(macros, expanded);
-             strcpy(line, expanded);  
-             free(expanded);
+                char* expanded = expand_function(key, line, macro, macros);
+                recursive_check_line(macros, expanded);
+                strcpy(line, expanded);  
+                free(expanded);
             }
             break;
         case FLE:
@@ -116,9 +115,7 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
                 /* Replace the key in the line */
                 file_m* m = macro->macro;
                 char* expanded_file = expand_file(m->file);
-                printf("Expanded file: \n\n%s\n", expanded_file);
                 char* replaced = search_and_replace(line, key, expanded_file);
-                printf("replaced:\n\n %s\n", replaced);
                 strcpy(line, replaced);
                 free(expanded_file);
                 free(replaced);
@@ -197,6 +194,7 @@ COPY:
 }
 
 unsigned has_new_keys = 0;
+size_t comment_cnt    = 0;
 /*
  * Adds macros to the hash table
  */
@@ -210,9 +208,13 @@ void add_macro(char* line, hash_table* t)
     m = xmalloc(sizeof(macro_t));
     key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
     strcpy(line_cpy, line);
-    macro_type = strtok(line, " \t"); 
-
-    if (strcmp(macro_type, MACRO_DEF) == 0) {
+    macro_type = strtok(line, " \t\n"); 
+    if (macro_type[0] != RESERVED_MACRO_CHAR){ /* TODO This is a stupid fix */
+        free(m);
+        free(key);
+        return;
+    } 
+    if (comment_cnt == 0 && strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         def_m* d_m = xmalloc(sizeof(def_m));
         strcpy(key, strtok(NULL, " \t"));
@@ -227,7 +229,7 @@ void add_macro(char* line, hash_table* t)
         m->macro = d_m;
         m->type = DEF;
         insert(t, key, m);
-    } else if (strcmp(macro_type, FUNC_DEF) == 0) {
+    } else if (comment_cnt == 0 && strcmp(macro_type, FUNC_DEF) == 0) {
         strcpy(key, strtok(NULL, "("));
         /* Error check */
         if (*(line_cpy + strlen(macro_type) + strlen(key) + 1) != '(')
@@ -240,7 +242,7 @@ void add_macro(char* line, hash_table* t)
         trim_leading_whitespace(expansion);
         init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
-    } else if (strcmp(macro_type, INC_DEF) == 0) {
+    } else if (comment_cnt == 0 && strcmp(macro_type, INC_DEF) == 0) {
         char* path;
         path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
 
@@ -250,8 +252,8 @@ void add_macro(char* line, hash_table* t)
         /* Turns out these aren't needed here. TODO refactor */
         free(m);
         free(key);
-         
-    } else if (strcmp(macro_type, FILE_DEF) == 0) {
+
+    } else if (comment_cnt == 0 && strcmp(macro_type, FILE_DEF) == 0) {
         char* path;
         path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
         strcpy(key, strtok(NULL, " \t"));
@@ -260,16 +262,49 @@ void add_macro(char* line, hash_table* t)
         init_file_macro(m, path);
         insert(t, key, m);
         free(path);
-    } else if (strcmp(macro_type, UNDEF_DEF) == 0){
-       strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
-       trim_leading_whitespace(key);
-       if (lookup(t, key)) {
-           remove_from_table(t, key);
-           free(key);
-           free(m);
-       } else 
-           formatted_uerror("Cannot remove key: %s! It is not defined\n", key);
-    } else 
+    } else if (comment_cnt == 0 && strcmp(macro_type, UNDEF_DEF) == 0) {
+        strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
+        trim_leading_whitespace(key);
+        if (lookup(t, key)) {
+            remove_from_table(t, key);
+            free(key);
+            free(m);
+        } else 
+            formatted_uerror("Cannot remove key: %s! It is not defined\n", key);
+    } else if (comment_cnt == 0 && strcmp(macro_type, IF_DEF) == 0) {
+        strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
+        trim_leading_whitespace(key);
+        if (strcmp(key, BOOL_FALSE) == 0) { /* $IF FALSE */
+            ++comment_cnt; 
+        } else if (strcmp(key, BOOL_TRUE) == 0) { /* $IF TRUE */
+            ; /* DO NOTHING */
+        } else {
+            if (!lookup(t, key)) { /* $IF SOMEUNDEFINEDMACRO */ 
+                ++comment_cnt;
+            } 
+        }
+        free(key);
+        free(m);
+    } else if (comment_cnt == 0 && strcmp(macro_type, IFN_DEF) == 0) {
+        strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
+        trim_leading_whitespace(key);
+        if (strcmp(key, BOOL_FALSE) == 0) { /* $IFN FALSE */
+            ; /* DO NOTHING */
+        } else if (strcmp(key, BOOL_TRUE) == 0) { /* $IFN TRUE */
+            comment_cnt++;
+        } else {
+            if (lookup(t, key)) { /* $IFN SOMEDEFINEDMACRO */ 
+                ++comment_cnt;
+            }
+        }
+        free(key);
+        free(m);
+    } else if (strcmp(macro_type, ENDIF_DEF) == 0) {
+        if (comment_cnt > 0)
+            --comment_cnt;
+        free(key);
+        free(m);
+    } else
         formatted_uerror("Unrecoginized token: %s\n", macro_type);
     has_new_keys = 1;
 }

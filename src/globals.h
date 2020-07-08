@@ -7,4 +7,5 @@ extern char      current_file[];
 extern unsigned  has_new_keys;
 extern char**    macro_keys;
 extern size_t    cnt;
+extern size_t    comment_cnt;
 #endif
