@@ -9,7 +9,7 @@ The program can read and write to stdin/stdout. Allowing for piping between prog
 `cat some.file | ./gtpp > file.out`
 will read the output from `cat` process it, and then the output will be redirected into the file `file.out`.
 
-### Macro types (**NEW** see UNDEF)
+### Macro types (**NEW** see IF)
 There are currently four different kinds of macros that can be defined.
 
 | **Type** | **Explanation**                                    |**Usage**                                              |
@@ -19,11 +19,12 @@ There are currently four different kinds of macros that can be defined.
 | INC      | Includes a file and reads all macros from it.        | `$INC <full/path/to/file>`                          |
 | FILE     | Includes a file as the expansion of the macro.       | `$FILE <KEY> <full/path/to/file>`                   |
 | UNDEF    | Undefines a macro, making it unavailable for use     | `$UNDEF <KEY> `                                     |
-
+| IF/IFN   | Boolean statement, can be used for comments and conditional inclusion. | `$IF <KEY/1/0> ` or `$IFN <KEY/1/0>`|
+| ENDIF    | Signifies the end of the boolean statement.          | `$ENDIF` |
 ## Writing macros
 There are several rules for getting the expected usage of the program, this will (probably) be fixed in the future.
 The rules are as follows:
-* All macros must be **defined** on their own line.
+* All macros must be **defined** on their **own line and at the beginning of it.**
 * To define simple text replacement macros use `$DEF KEY <expansion>`.
 * To define a function use `$FUN` at the begining of the line.
 * Function macros must be defined according to the following rules, in addition to the rules above:
