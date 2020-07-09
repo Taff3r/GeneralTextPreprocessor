@@ -32,8 +32,7 @@ hash_entry* new_hash_entry(void* key, void* val)
  */
 void delete_hash_table(hash_table* table)
 {
-    int i;
-    size_t sz;
+    size_t sz, i;
 
     sz = table->sz;
     for (i = 0; i < sz; ++i) {

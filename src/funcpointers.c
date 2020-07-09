@@ -1,6 +1,8 @@
 #include "funcpointers.h"
 #include "process_file.h"
 #include <string.h>
+#define UNUSED(x) (void)(x)
+
 size_t hash(const void* ptr)
 {
     size_t hash = 5381;
@@ -55,6 +57,7 @@ void delete_val(void* macro)
 
 void delete_key(void* str)
 {
+    UNUSED(str);
     return;
 }
 
