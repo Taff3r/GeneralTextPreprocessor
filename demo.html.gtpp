@@ -19,6 +19,9 @@ $DEF _3BR                       <br><br><br>
     _P(_IT(Here is an image!))
     <br>
     IMG(demo_img.jpg,400,600)
+$IF 0
+    _P(_IT(Oops this isn't supposed to be included))
+$ENDIF
 </body>
 </html>
 
