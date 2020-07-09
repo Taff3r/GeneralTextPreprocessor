@@ -28,9 +28,8 @@ void process(FILE* input, FILE* output)
             /* normal word write to output */
         else if (comment_cnt == 0 && line[0] != RESERVED_MACRO_CHAR )
                 write_line(map, line, output);
-        else /* Add since it is a macro line. */
+        else if(line[0] == RESERVED_MACRO_CHAR)/* Add since it is a macro line. */
                 add_macro(line, map);
-
         ++line_number;
     }
     free(macro_keys);
@@ -136,14 +135,12 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
     /* Find instance of key in line */
     strcpy(line_cpy, line);
     key_il = strstr(line_cpy, key);
-
     /* Find the pos of parentheses*/
     pos_of_parentheses = key_il - line_cpy + strlen(key);
     char* line_p = line_cpy + pos_of_parentheses;
 
     size_t l_par, r_par, last_delim, i, k;
     l_par = r_par = last_delim = i = k = 0;
-
     if (line_p[i] != '(')
         formatted_uerror("Missing '(' in function call.\n", NULL);
 
