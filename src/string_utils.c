@@ -18,7 +18,7 @@ char** tokenize(char* line, char* delimeters, size_t* sz)
    tokens = xcalloc(MAX_LINE_LENGTH / MAX_WORD_LENGTH, \
            sizeof(char*));
    *sz = 0;
-   token = strtok(line, " ");
+   token = strtok(line, delimeters);
    do {
         tokens[*sz] = xcalloc(strlen(token) + 1, sizeof(char));
         strcpy(tokens[*sz], token);

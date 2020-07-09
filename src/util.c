@@ -51,8 +51,8 @@ void* xcalloc(size_t cnt, size_t size)
 
 void extract_path_and_file(char* dst, char* dst_f, const char* path_to_file)
 {
-    size_t i;
-    size_t len = strlen(path_to_file);
+    int i;
+    int len = strlen(path_to_file);
     for (i = len; i >= 0; --i)
         if(path_to_file[i] == '/')
             break;

@@ -41,7 +41,7 @@ void process(FILE*, FILE*);
 void expand_macro(char*, char*, const macro_t*, const hash_table*);
 void find_and_replace_keys(char*, const hash_table*);
 void write_line(hash_table*, char*, FILE*);
-char* expand_function(const char* key, char* line, const macro_t* macro, const hash_table*);
+char* expand_function(const char* key, char* line, const macro_t* macro);
 void add_macro(char*, hash_table*);
 
 void init_fun_macro(macro_t*, char*, char*);

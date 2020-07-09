@@ -104,7 +104,7 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
             break;
         case FUN:
             {
-                char* expanded = expand_function(key, line, macro, macros);
+                char* expanded = expand_function(key, line, macro);
                 recursive_check_line(macros, expanded);
                 strcpy(line, expanded);  
                 free(expanded);
@@ -125,7 +125,7 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
     }
 }
 
-char* expand_function(const char* key, char* line, const macro_t* macro, const hash_table* macros) 
+char* expand_function(const char* key, char* line, const macro_t* macro) 
 {
     func_m* m = macro->macro;
     char** line_args = xcalloc(m->argc, sizeof(char*));
