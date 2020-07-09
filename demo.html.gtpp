@@ -1,0 +1,25 @@
+$FUN IMG($src, $width, $height) <img src=$src width="$width" height="$height">
+$FUN H1($text)                  <h1>$text</h1>
+$FUN LINK($src,$txt)            <a href="$src">$txt</a>
+$FUN BTN($txt)                  <button type="button">$txt</button>
+$FUN _P($txt)                   <p>$txt</p>
+$FUN _IT($txt)                  <i>$txt</i>
+$DEF _3BR                       <br><br><br>
+
+<!DOCTYPE html>
+<html>
+<body>
+
+    H1(Welcome to the demo!)
+    _3BR
+    BTN(This is a button!)
+    <br>
+    LINK(https://github.com/taff3r,This is a link to the author's GitHub account!)
+    _3BR
+    _P(_IT(Here is an image!))
+    <br>
+    IMG(demo_img.jpg,400,600)
+</body>
+</html>
+
+
