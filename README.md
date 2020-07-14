@@ -57,7 +57,6 @@ Will result in:
 Are you having a good day today?
 ```
 
-**NEW**
 Arguments to functions can also be functions themselves.
 ```
 FOUR(TWO(Are,THREE(you,having,a)),THREE(good,day,today?),one,two)
@@ -65,7 +64,7 @@ FOUR(TWO(Are,THREE(you,having,a)),THREE(good,day,today?),one,two)
 Will evaluate to:
 `Are you having a good day today? 1 2`
 
-### Example of usage (**NEW** See usage of FILE macro)
+### Example of usage (**NEW** See usage of IF)
 macros/personal.gtpp:
 ```
 $DEF SCHOOL Lunds Tekniska Högskola (LTH)
@@ -89,6 +88,13 @@ Hello everyone my name is NAME, and I am currently studying my fourth year at SC
 Here is a link to my Instagram INSTALINK(simontenggren), follow if you like.
 
 CMAIN
+$IF 0
+Oops I didn't mean to include this...
+$ENDIF
+
+$IF CMAIN
+This I want to include...
+$ENDIF
 
 ```
 
@@ -103,6 +109,7 @@ int main(void)
     printf("Hello, world!\n");
 }
 
+This I want to include...
 ```
 
 ### Customization

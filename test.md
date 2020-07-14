@@ -11,7 +11,7 @@ $FUN THREE($a, $b, $c)                   $a TWO($b,$c)
 $FUN FOUR($arg, $barg, $carg, $darg)     $arg THREE($barg,$carg,$darg)
 $FUN INSTA($c)                           https://instagram.com/$c FOUR(one, two, three, four)
 $DEF PROF                                simontenggren
-$INC /home/simont/git/GeneralTextPreprocessor/macros/recinc.gtpp
+$INC                                     /home/simont/git/GeneralTextPreprocessor/macros/recinc.gtpp
 
 # Intro
 How are you?
@@ -24,11 +24,17 @@ INSTA(CAT(simon,tenggren))
 FOUR(Are you having a,CAT(simon,tenggren),day,INSTA(CAT(MYNAME,MYAGE)))
 $FILE CMAIN                            ./src/main.c
 
-$IFN CMAIN
 CMAIN
-$ENDIF
 
 ## Another header
+INSTA() <- This makes sense since argument is just nothing
+
+$IF 0
+some comment
+$IF 0
+some other comment
+$ENDIF
+$ENDIF
 3C
 BAJS
 COOL

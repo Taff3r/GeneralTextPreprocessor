@@ -28,7 +28,7 @@ void process(FILE* input, FILE* output)
             /* normal word write to output */
         else if (comment_cnt == 0 && line[0] != RESERVED_MACRO_CHAR )
                 write_line(map, line, output);
-        else if(line[0] == RESERVED_MACRO_CHAR)/* Add since it is a macro line. */
+        else if(line[0] == RESERVED_MACRO_CHAR) /* Add since it is a macro line. */
                 add_macro(line, map);
         ++line_number;
     }
@@ -36,8 +36,16 @@ void process(FILE* input, FILE* output)
     delete_hash_table(map);
 } 
 
+/*
+ * Init. global vars.
+ */
 size_t cnt = 0;
 char** macro_keys = NULL;
+
+/*
+ * Checks if there are any new keys. 
+ * If there are new keys sort and refresh the key variable.
+ */
 void m_keys(const hash_table* macros) {
     if (has_new_keys) {
         free(macro_keys);
@@ -46,6 +54,10 @@ void m_keys(const hash_table* macros) {
         has_new_keys = 0;
     } 
 }
+
+/* 
+ * Write line to output after checking for any macros present in it.
+ */
 void write_line(hash_table* macros, char* line, FILE* output)
 {
     /* Check if line contains any of the macros in the table,
@@ -68,6 +80,9 @@ void write_line(hash_table* macros, char* line, FILE* output)
     fputs(line, output);
 }
 
+/* 
+ * Recursively check the line if it still contains any macros.
+ */
 void recursive_check_line(const hash_table* macros, char* line)
 {
     /* Check if line contains any of the macros in the table,
@@ -124,6 +139,9 @@ void expand_macro(char* key, char* line, const macro_t* macro, const hash_table*
     }
 }
 
+/*
+ * Expands the function.
+ */
 char* expand_function(const char* key, char* line, const macro_t* macro) 
 {
     func_m* m = macro->macro;
@@ -135,6 +153,7 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
     /* Find instance of key in line */
     strcpy(line_cpy, line);
     key_il = strstr(line_cpy, key);
+
     /* Find the pos of parentheses*/
     pos_of_parentheses = key_il - line_cpy + strlen(key);
     char* line_p = line_cpy + pos_of_parentheses;
@@ -146,9 +165,9 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
 
     last_delim = i++; 
     l_par++;
+
     /* Read the args inside the parentheses */
-    /* TODO ADD ERROR HANDLING */
-    for (; k < m->argc && line_p[i] != '\n' && l_par > r_par; ++i) {
+    for (; line_p[i] != '\n' && l_par > r_par; ++i) {
         if (line_p[i] == '(')
             ++l_par;
         else if (line_p[i] == ')') {
@@ -159,11 +178,18 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
         else if (line_p[i] == ',')
             if (l_par == r_par + 1) {
 COPY:           
+                if (k >= m->argc)
+                    formatted_uerror("To many arguments in function!\n", NULL);
+
                 line_args[k] = xcalloc(i - last_delim, sizeof(char)); 
                 strncpy(line_args[k++], line_p + last_delim  + 1, i - last_delim - 1);
                 last_delim = i;
             }
     }
+    if (k < m->argc)
+        formatted_uerror("To few arguments in function!\n", NULL);
+    
+
     /* Replaced the arguments provided with to the expansion */
     char* expansion = search_and_replace_all(m->expansion, m->argv, \
             line_args, m->argc);
@@ -190,8 +216,12 @@ COPY:
     return final;
 }
 
+/*
+ * Init global vars.
+ */
 unsigned has_new_keys = 0;
 size_t comment_cnt    = 0;
+
 /*
  * Adds macros to the hash table
  */
@@ -222,7 +252,6 @@ void add_macro(char* line, hash_table* t)
         trim_leading_whitespace(expansion);
         d_m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
         strcpy(d_m->expansion, expansion);
-        /* TODO: Changed here removed init_def*/
         m->macro = d_m;
         m->type = DEF;
         insert(t, key, m);
@@ -236,6 +265,8 @@ void add_macro(char* line, hash_table* t)
         char* arg_list = strtok(NULL, ")");
         trim_whitespace(arg_list);
         char* expansion = strtok(NULL, NEWLINE_CHAR);
+        if (!expansion)
+            formatted_uerror("Error in function defintion. Try checking for missing ')'\n", NULL);
         trim_leading_whitespace(expansion);
         init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
@@ -244,6 +275,7 @@ void add_macro(char* line, hash_table* t)
         path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
 
         strcpy(path, strtok(NULL, NEWLINE_CHAR));
+        trim_leading_whitespace(path);
         include_file(path, t);
         free(path);
         /* Turns out these aren't needed here. TODO refactor */
@@ -268,7 +300,7 @@ void add_macro(char* line, hash_table* t)
             free(m);
         } else 
             formatted_uerror("Cannot remove key: %s! It is not defined\n", key);
-    } else if (comment_cnt == 0 && strcmp(macro_type, IF_DEF) == 0) {
+    } else if (strcmp(macro_type, IF_DEF) == 0) {
         strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
         trim_leading_whitespace(key);
         if (strcmp(key, BOOL_FALSE) == 0) { /* $IF FALSE */
@@ -282,7 +314,7 @@ void add_macro(char* line, hash_table* t)
         }
         free(key);
         free(m);
-    } else if (comment_cnt == 0 && strcmp(macro_type, IFN_DEF) == 0) {
+    } else if (strcmp(macro_type, IFN_DEF) == 0) {
         strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
         trim_leading_whitespace(key);
         if (strcmp(key, BOOL_FALSE) == 0) { /* $IFN FALSE */
@@ -301,11 +333,15 @@ void add_macro(char* line, hash_table* t)
             --comment_cnt;
         free(key);
         free(m);
-    } else
+    } else if (comment_cnt == 0) {
         formatted_uerror("Unrecoginized token: %s\n", macro_type);
+    }
     has_new_keys = 1;
 }
 
+/* 
+ * Initiates a function macro.
+ */
 void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
 {
     func_m* f_m = xmalloc(sizeof(func_m));
@@ -348,7 +384,9 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
     m->macro = f_m;
 }
 
-
+/*
+ * Initiates a file macro.
+ */
 void init_file_macro(macro_t* m, char* path_to_file)
 {
     file_m* f_m = xmalloc(sizeof(file_m));
