@@ -7,7 +7,7 @@ hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*h
 {
     hash_table* table;
     table = xmalloc(sizeof(hash_table));
-    table->entries = xcalloc(TABLE_INIT_SIZE, sizeof(hash_entry*)); // TODO: Optimize since power of 2
+    table->entries = xcalloc(TABLE_INIT_SIZE, sizeof(hash_entry*)); /* TODO: Optimize since power of 2 */
     table->sz = TABLE_INIT_SIZE;
     table->inserted = 0; 
     table->compare = comp;
@@ -28,7 +28,7 @@ hash_entry* new_hash_entry(void* key, void* val)
     return e;
 }
 /*
- * TODO: Add free policy for free'ing allocated memory inside eventual memory inside structs in keys/values.
+ * Deletes the tables and it's entries.
  */
 void delete_hash_table(hash_table* table)
 {
@@ -45,10 +45,12 @@ void delete_hash_table(hash_table* table)
 
 void delete_entry(hash_entry* e, void(*key_deleter)(void*), void(*val_deleter)(void*))
 {
+    hash_entry* t;
+    hash_entry* n;
+
     if(e == NULL)
         return;
-    hash_entry* t = e;
-    hash_entry* n;
+    t = e;
     do {
         key_deleter(t->key);
         val_deleter(t->val);
@@ -62,15 +64,20 @@ void delete_entry(hash_entry* e, void(*key_deleter)(void*), void(*val_deleter)(v
 
 int insert(hash_table* table, void* key, void* val)
 {
+    size_t index;
+    hash_entry* e;
+
     if(lookup(table,key) != NULL)
         return 0;
-    size_t index = table->hash(key) & (table->sz - 1); 
-    hash_entry* e = table->entries[index];
+    
+    index = table->hash(key) & (table->sz - 1); 
+    e = table->entries[index];
     if (e == NULL) {
         table->entries[index] = new_hash_entry(key, val);
     } else {
-        if (table->entries[index]->next != NULL) { // Not NULL
-            hash_entry* nn = table->entries[index]->next; // Can be NULL
+        if (table->entries[index]->next != NULL) { /* Not NULL */
+            hash_entry* nn;
+            nn = table->entries[index]->next; /* Can be NULL */
             table->entries[index]->next = new_hash_entry(key, val);
             table->entries[index]->next->next = nn;
         } else {
@@ -91,7 +98,7 @@ void grow(hash_table* table)
 
     old_entries = table->entries;
     old_sz = table->sz;
-    table->sz = (table->sz << 1); // table size = 2 * old table size;
+    table->sz = (table->sz << 1); /* table size = 2 * old table size; */
     table->entries = xcalloc(table->sz, sizeof(hash_entry*));
 
     for (i = 0; i < old_sz; ++i) {
@@ -106,17 +113,22 @@ void grow(hash_table* table)
 
 void* lookup(const hash_table* table, const void* key)
 {
-    void* val = NULL;
-    size_t index = table->hash(key) & (table->sz - 1);
-    hash_entry* e = table->entries[index];
+    void* val;
+    size_t index;
+    hash_entry* e;
+
+    index = table->hash(key) & (table->sz - 1);
+    e = table->entries[index];
+    val = NULL;
 
     if (e == NULL)
         return val;
 
-    if(table->compare(e->key, key)) // 1 == Equal
+    if(table->compare(e->key, key)) /* 1 == Equal */
         val = e->val;
     else {
-        hash_entry* t = e->next;
+        hash_entry* t;
+        t = e->next;
         while(t != NULL) {
             if (table->compare(t->key, key)) {
                 val = t->val;

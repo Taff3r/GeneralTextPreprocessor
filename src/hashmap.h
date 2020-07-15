@@ -3,7 +3,7 @@
 #include <stdlib.h>
 typedef struct hash_table hash_table;
 typedef struct hash_entry hash_entry;
-// Keep the size of the hash table a power of 2 of efficieny reasons.
+/* Keep the size of the hash table a power of 2 of efficieny reasons. */
 #define TABLE_INIT_SIZE 64
 #define MAX_SATIATION (0.65f)
 struct hash_table {
