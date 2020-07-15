@@ -47,4 +47,6 @@ CLEANUP:
         free(output_file_name);
     fclose(input);
     fclose(output);
+
+    return 0;
 }
