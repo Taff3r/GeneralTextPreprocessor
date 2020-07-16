@@ -11,8 +11,8 @@ enum e_macro {
 
 typedef struct macro_t macro_t;
 struct macro_t {
-    enum e_macro type;
     void* macro;
+    enum e_macro type;
 };
 
 typedef struct func_m func_m;

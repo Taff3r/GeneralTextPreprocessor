@@ -147,7 +147,7 @@ char* expand_function(const char* key, char* line, const macro_t* macro)
     func_m* m = macro->macro;
     char** line_args = xcalloc(m->argc, sizeof(char*));
     char* key_il;
-    char line_cpy[MAX_LINE_LENGTH]; /* TODO correct size */
+    char line_cpy[strlen(line) + 1];
     size_t pos_of_parentheses;
 
     /* Find instance of key in line */
@@ -194,6 +194,7 @@ COPY:
     char* expansion = search_and_replace_all(m->expansion, m->argv, \
             line_args, m->argc);
 
+    /* TODO: Avoid strcat */
     char* concat;
     concat = xcalloc(strlen(key) + m->argc * MAX_WORD_LENGTH + 1, sizeof(char));
     char key_cpy[strlen(key) + 1];
@@ -232,18 +233,13 @@ void add_macro(char* line, hash_table* t)
     macro_t* m;
     char line_cpy[strlen(line) + 1]; /* Needed for error handling */
 
-    m = xmalloc(sizeof(macro_t));
-    key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
     strcpy(line_cpy, line);
     macro_type = strtok(line, " \t\n"); 
-    if (macro_type[0] != RESERVED_MACRO_CHAR){ /* TODO This is a stupid fix */
-        free(m);
-        free(key);
-        return;
-    } 
+
     if (comment_cnt == 0 && strcmp(macro_type, MACRO_DEF) == 0) {
         /* Add as simple replacement macro */
         def_m* d_m = xmalloc(sizeof(def_m));
+        key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
         strcpy(key, strtok(NULL, " \t"));
         if (lookup(t, key))
             formatted_uerror("Multiple definitions of key: %s\n", key);
@@ -252,10 +248,15 @@ void add_macro(char* line, hash_table* t)
         trim_leading_whitespace(expansion);
         d_m->expansion = xcalloc(strlen(expansion) + 1, sizeof(char));
         strcpy(d_m->expansion, expansion);
+        m = xmalloc(sizeof(macro_t));
         m->macro = d_m;
         m->type = DEF;
         insert(t, key, m);
+        has_new_keys = 1;
     } else if (comment_cnt == 0 && strcmp(macro_type, FUNC_DEF) == 0) {
+        key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
+        m = xmalloc(sizeof(macro_t));
+
         strcpy(key, strtok(NULL, "("));
         /* Error check */
         if (*(line_cpy + strlen(macro_type) + strlen(key) + 1) != '(')
@@ -270,6 +271,7 @@ void add_macro(char* line, hash_table* t)
         trim_leading_whitespace(expansion);
         init_fun_macro(m, arg_list, expansion);
         insert(t, key, m);
+        has_new_keys = 1;
     } else if (comment_cnt == 0 && strcmp(macro_type, INC_DEF) == 0) {
         char* path;
         path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
@@ -279,28 +281,33 @@ void add_macro(char* line, hash_table* t)
         include_file(path, t);
         free(path);
         /* Turns out these aren't needed here. TODO refactor */
-        free(m);
-        free(key);
-
     } else if (comment_cnt == 0 && strcmp(macro_type, FILE_DEF) == 0) {
         char* path;
+
         path = xcalloc(MAX_LINE_LENGTH - 1, sizeof(char));
-        strcpy(key, strtok(NULL, " \t"));
+        key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
+        m = xmalloc(sizeof(macro_t));
+
+        strcpy(key, strtok(NULL, WHITESPACE));
         strcpy(path, strtok(NULL, NEWLINE_CHAR));
         trim_leading_whitespace(path);
         init_file_macro(m, path);
         insert(t, key, m);
         free(path);
+        has_new_keys = 1;
     } else if (comment_cnt == 0 && strcmp(macro_type, UNDEF_DEF) == 0) {
+        key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
         strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
         trim_leading_whitespace(key);
         if (lookup(t, key)) {
             remove_from_table(t, key);
             free(key);
-            free(m);
         } else 
             formatted_uerror("Cannot remove key: %s! It is not defined\n", key);
+        has_new_keys = 1;
     } else if (strcmp(macro_type, IF_DEF) == 0) {
+        key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
+
         strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
         trim_leading_whitespace(key);
         if (strcmp(key, BOOL_FALSE) == 0) { /* $IF FALSE */
@@ -313,9 +320,9 @@ void add_macro(char* line, hash_table* t)
             } 
         }
         free(key);
-        free(m);
     } else if (strcmp(macro_type, IFN_DEF) == 0) {
-        strcpy(key, strtok(strtok(NULL, " \t"), NEWLINE_CHAR));
+        key = xcalloc(MAX_WORD_LENGTH + 1, sizeof(char));
+        strcpy(key, strtok(strtok(NULL, WHITESPACE), NEWLINE_CHAR));
         trim_leading_whitespace(key);
         if (strcmp(key, BOOL_FALSE) == 0) { /* $IFN FALSE */
             ; /* DO NOTHING */
@@ -327,16 +334,12 @@ void add_macro(char* line, hash_table* t)
             }
         }
         free(key);
-        free(m);
     } else if (strcmp(macro_type, ENDIF_DEF) == 0) {
         if (comment_cnt > 0)
             --comment_cnt;
-        free(key);
-        free(m);
     } else if (comment_cnt == 0) {
         formatted_uerror("Unrecoginized token: %s\n", macro_type);
     }
-    has_new_keys = 1;
 }
 
 /* 
@@ -361,7 +364,7 @@ void init_fun_macro(macro_t* m, char* arg_list, char* expansion)
         /* Find position of first RESERVED_MACRO_CHAR */
         while(key_cpy[i] != RESERVED_MACRO_CHAR)
             ++i;
-        /* Find position of next ',' or ')' */
+        /* Find position of next 's,' or ')' */
         size_t n = i;
         while (key_cpy[n] != ',' &&  key_cpy[n] != '\0')
             n++;

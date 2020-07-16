@@ -30,5 +30,6 @@
 #define MAX_ARGC (10)
 #define STRING_DELIMTERS ", ("
 #define NEWLINE_CHAR "\n"   
+#define WHITESPACE   " \t"
 
 #endif

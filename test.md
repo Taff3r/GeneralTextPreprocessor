@@ -9,7 +9,7 @@ $FUN YTC($c)                             https://www.youtube.com/channel/$c
 $FUN TWO($a, $b)                         $a $b
 $FUN THREE($a, $b, $c)                   $a TWO($b,$c)
 $FUN FOUR($arg, $barg, $carg, $darg)     $arg THREE($barg,$carg,$darg)
-$FUN INSTA($c)                           https://instagram.com/$c FOUR(one, two, three, four)
+$FUN INSTA($c)                           https://instagram.com/$c
 $DEF PROF                                simontenggren
 $INC                                     /home/simont/git/GeneralTextPreprocessor/macros/recinc.gtpp
 
@@ -28,7 +28,7 @@ CMAIN
 
 ## Another header
 INSTA() <- This makes sense since argument is just nothing
-
+ADD(1,2)
 $IF 0
 some comment
 $IF 0

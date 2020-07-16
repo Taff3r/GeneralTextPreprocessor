@@ -4,3 +4,5 @@ gtpp
 test_*
 */*.o
 *.o
+*/*.gcda
+*/*.gcno
