@@ -1,0 +1,78 @@
+        -:    0:Source:src/funcpointers.c
+        -:    0:Graph:profiling/gc/funcpointers.gcno
+        -:    0:Data:profiling/gc/funcpointers.gcda
+        -:    0:Runs:1
+        -:    1:#include "funcpointers.h"
+        -:    2:#include "process_file.h"
+        -:    3:#include <string.h>
+        -:    4:#define UNUSED(x) (void)(x)
+        -:    5:
+       89:    6:size_t hash(const void* ptr)
+        -:    7:{
+       89:    8:    size_t hash = 5381;
+       89:    9:    int c;
+       89:   10:    const char* str = (char*) ptr;
+      505:   11:    while ((c = *str++) != '\0')
+      416:   12:        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+       89:   13:    return hash;
+        -:   14:}
+        -:   15:
+       49:   16:int cmp(const void* a, const void* b)
+        -:   17:{
+       49:   18:    const char* m_a = (const char*) a;
+       49:   19:    const char* m_b = (const char*) b;
+       49:   20:    return strcmp(m_a, m_b) == 0;
+        -:   21:}
+        -:   22:
+        -:   23:
+       21:   24:void delete_val(void* macro)
+        -:   25:{
+       21:   26:    macro_t* m = macro;
+       21:   27:    switch (m->type) {
+       10:   28:        case DEF:
+        -:   29:            {
+       10:   30:                def_m* dm = m->macro;
+       10:   31:                free(dm->expansion);
+       10:   32:                free(dm);
+       10:   33:                break;
+        -:   34:            }
+       10:   35:        case FUN:
+        -:   36:            {
+       10:   37:                func_m* fm = m->macro;
+       30:   38:                for (size_t i = 0; i < fm->argc; ++i)
+       20:   39:                    free(fm->argv[i]); 
+       10:   40:                free(fm->argv);
+       10:   41:                free(fm->expansion);
+       10:   42:                free(fm);
+       10:   43:                break;
+        -:   44:            }
+        1:   45:        case FLE:
+        -:   46:            {
+        1:   47:                file_m* fm= m->macro;
+        1:   48:                fclose(fm->file);
+        1:   49:                free(fm);
+        1:   50:                break;
+        -:   51:            }
+        -:   52:        default:
+        -:   53:            return;
+        -:   54:            
+        -:   55:    }
+        -:   56:}
+        -:   57:
+       21:   58:void delete_key(void* str)
+        -:   59:{
+       21:   60:    UNUSED(str);
+       21:   61:    return;
+        -:   62:}
+        -:   63:
+      369:   64:int string_cmp(const void* a, const void* b)
+        -:   65:{
+      369:   66:    const char** ia = (const char**) a;
+      369:   67:    const char** ib = (const char**) b;
+      369:   68:    if (strlen(*ia) == strlen(*ib))
+        -:   69:        return 0;
+      246:   70:    else if (strlen(*ia) < strlen(*ib))
+        -:   71:        return 1;
+        -:   72:    else
+       66:   73:        return -1;
+        -:   74:}

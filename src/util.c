@@ -37,7 +37,7 @@ void* xmalloc(size_t size)
 {
     void* ptr = malloc(size);
     if(ptr == NULL)
-        exit(1);
+        formatted_uerror("Out of memory!\n", NULL);
     return ptr;
 }
 
@@ -45,7 +45,7 @@ void* xcalloc(size_t cnt, size_t size)
 {
     void* ptr = calloc(cnt, size);
     if(ptr == NULL)
-        exit(1);
+        formatted_uerror("Out of memory!\n", NULL);
     return ptr;
 }
 

@@ -1,0 +1,12 @@
+CPU: ppc64 POWER8, speed 3491 MHz (estimated)
+Counted CYCLES events (Cycles) with a unit mask of 0x00 (No unit mask) count 100000
+    CYCLES:100000|
+  samples|      %|
+------------------
+       14 100.000 gtpp
+	    CYCLES:100000|
+	  samples|      %|
+	------------------
+	        8 57.1429 libc-2.27.so
+	        4 28.5714 gtpp
+	        2 14.2857 ld-2.27.so

@@ -1,0 +1,197 @@
+        -:    0:Source:src/hash_map.c
+        -:    0:Graph:profiling/gc/hash_map.gcno
+        -:    0:Data:profiling/gc/hash_map.gcda
+        -:    0:Runs:1
+        -:    1:#include "hashmap.h"
+        -:    2:#include <stdlib.h>
+        -:    3:#include <stdio.h>
+        -:    4:#include <string.h>
+        -:    5:#include "util.h"
+        1:    6:hash_table* new_hash_table(int (*comp)(const void* a, const void* b), size_t (*hash) (const void* k), void (*key_del)(void*), void(*val_del)(void*))
+        -:    7:{
+        1:    8:    hash_table* table;
+        1:    9:    table = xmalloc(sizeof(hash_table));
+        1:   10:    table->entries = xcalloc(TABLE_INIT_SIZE, sizeof(hash_entry*)); /* TODO: Optimize since power of 2 */
+        1:   11:    table->sz = TABLE_INIT_SIZE;
+        1:   12:    table->inserted = 0; 
+        1:   13:    table->compare = comp;
+        1:   14:    table->hash = hash;
+        1:   15:    table->key_deleter = key_del;
+        1:   16:    table->value_deleter = val_del;
+        -:   17:
+        1:   18:    return table;
+        -:   19:}
+        -:   20:
+      21*:   21:hash_entry* new_hash_entry(void* key, void* val) 
+        -:   22:{
+      21*:   23:    hash_entry* e;
+    #####:   24:    e = xmalloc(sizeof(hash_entry));
+      21*:   25:    e->key = key;
+      21*:   26:    e->val = val;
+      21*:   27:    e->next = NULL;
+      21*:   28:    return e;
+        -:   29:}
+        -:   30:/*
+        -:   31: * Deletes the tables and it's entries.
+        -:   32: */
+        1:   33:void delete_hash_table(hash_table* table)
+        -:   34:{
+        1:   35:    size_t sz, i;
+        -:   36:
+        1:   37:    sz = table->sz;
+       65:   38:    for (i = 0; i < sz; ++i) {
+       64:   39:        delete_entry(table->entries[i], table->key_deleter, table->value_deleter);
+        -:   40:    }
+        -:   41:
+        1:   42:    free(table->entries);
+        1:   43:    free(table);
+        1:   44:}
+        -:   45:
+       64:   46:void delete_entry(hash_entry* e, void(*key_deleter)(void*), void(*val_deleter)(void*))
+        -:   47:{
+       64:   48:    hash_entry* t;
+       64:   49:    hash_entry* n;
+        -:   50:
+       64:   51:    if(e == NULL)
+        -:   52:        return;
+        -:   53:    t = e;
+       20:   54:    do {
+       20:   55:        key_deleter(t->key);
+       20:   56:        val_deleter(t->val);
+       20:   57:        free(t->val);
+       20:   58:        free(t->key);
+       20:   59:        n = t;
+       20:   60:        t = t->next;
+       20:   61:        free(n);
+       20:   62:    } while(t != NULL);
+        -:   63:}
+        -:   64:
+       21:   65:int insert(hash_table* table, void* key, void* val)
+        -:   66:{
+       21:   67:    size_t index;
+       21:   68:    hash_entry* e;
+        -:   69:
+       21:   70:    if(lookup(table,key) != NULL)
+        -:   71:        return 0;
+        -:   72:    
+       21:   73:    index = table->hash(key) & (table->sz - 1); 
+       21:   74:    e = table->entries[index];
+       21:   75:    if (e == NULL) {
+       18:   76:        table->entries[index] = new_hash_entry(key, val);
+        -:   77:    } else {
+        3:   78:        if (table->entries[index]->next != NULL) { /* Not NULL */
+    #####:   79:            hash_entry* nn;
+    #####:   80:            nn = table->entries[index]->next; /* Can be NULL */
+    #####:   81:            table->entries[index]->next = new_hash_entry(key, val);
+    #####:   82:            table->entries[index]->next->next = nn;
+        -:   83:        } else {
+        3:   84:            table->entries[index]->next = new_hash_entry(key, val);
+        3:   85:            table->entries[index]->next->val = val;
+        3:   86:            table->entries[index]->next->key = key;
+        -:   87:        }
+        -:   88:    }
+       21:   89:    table->inserted++;
+       21:   90:    return 1;
+        -:   91:}
+        -:   92:
+    #####:   93:void grow(hash_table* table)
+        -:   94:{
+    #####:   95:    size_t i;
+    #####:   96:    size_t old_sz;
+    #####:   97:    hash_entry** old_entries;
+        -:   98:
+    #####:   99:    old_entries = table->entries;
+    #####:  100:    old_sz = table->sz;
+    #####:  101:    table->sz = (table->sz << 1); /* table size = 2 * old table size; */
+    #####:  102:    table->entries = xcalloc(table->sz, sizeof(hash_entry*));
+        -:  103:
+    #####:  104:    for (i = 0; i < old_sz; ++i) {
+    #####:  105:        size_t index;
+    #####:  106:        if (old_entries[i] != NULL) {
+    #####:  107:            index = table->hash(old_entries[i]->key) & (table->sz - 1);
+    #####:  108:            table->entries[index] = old_entries[i];
+        -:  109:        }
+        -:  110:    }
+    #####:  111:    free(old_entries);
+    #####:  112:}
+        -:  113:
+       67:  114:void* lookup(const hash_table* table, const void* key)
+        -:  115:{
+       67:  116:    void* val;
+       67:  117:    size_t index;
+       67:  118:    hash_entry* e;
+        -:  119:
+       67:  120:    index = table->hash(key) & (table->sz - 1);
+       67:  121:    e = table->entries[index];
+       67:  122:    val = NULL;
+        -:  123:
+       67:  124:    if (e == NULL)
+        -:  125:        return val;
+        -:  126:
+       41:  127:    if(table->compare(e->key, key)) /* 1 == Equal */
+       29:  128:        val = e->val;
+        -:  129:    else {
+       12:  130:        hash_entry* t;
+       12:  131:        t = e->next;
+       12:  132:        while(t != NULL) {
+        7:  133:            if (table->compare(t->key, key)) {
+        7:  134:                val = t->val;
+        7:  135:                return val;
+        -:  136:            }
+        -:  137:            else
+    #####:  138:                t = t->next;
+        -:  139:        }
+        -:  140:    }
+        -:  141:    return val;
+        -:  142:}
+        -:  143:
+        1:  144:int remove_from_table(hash_table* table, const void* key)
+        -:  145:{
+        1:  146:    size_t index;
+        1:  147:    hash_entry* e;
+        1:  148:    index = table->hash(key) & (table->sz - 1);
+        -:  149:
+        1:  150:    e = table->entries[index];
+        1:  151:    if (e == NULL)
+        -:  152:        return 0;
+        1:  153:    while (e != NULL)
+        1:  154:        if (table->compare(e->key, key)) {
+        1:  155:            table->entries[index] = e->next;
+        -:  156:
+        1:  157:            table->value_deleter(e->val);
+        1:  158:            table->key_deleter(e->key);
+        1:  159:            free(e->val);
+        1:  160:            free(e->key);
+        1:  161:            free(e);
+        1:  162:            return 1;
+        -:  163:        } else 
+    #####:  164:            e = e->next;
+        -:  165:
+        -:  166:    return 0;
+        -:  167:    
+        -:  168:}
+        -:  169:
+        -:  170:/**
+        -:  171: * Returns all non-null keys.
+        -:  172: * Ownership: Only outer pointer, not inner.
+        -:  173: */
+        6:  174:void** keys(const hash_table* t, size_t* k) {
+        6:  175:    size_t i;
+        6:  176:    void* keys_tmp[t->sz];
+        -:  177:
+        6:  178:    *k = 0;
+      390:  179:    for (i = 0; i < t->sz; ++i)
+      384:  180:        if (t->entries[i] != NULL){
+      100:  181:            keys_tmp[(*k)++] = t->entries[i]->key;
+      100:  182:            hash_entry* tmp = t->entries[i];
+      116:  183:            while(tmp->next != NULL) {
+       16:  184:                keys_tmp[(*k)++] = tmp->next->key;
+       16:  185:                tmp = tmp->next;
+        -:  186:            }
+        -:  187:        }
+        6:  188:    void** keys = xcalloc(*k, sizeof(void*));
+      128:  189:    for (i = 0; i < *k; ++i){
+      116:  190:        keys[i] = keys_tmp[i];
+        -:  191:    }
+        6:  192:    return keys;
+        -:  193:}

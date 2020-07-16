@@ -1,0 +1,74 @@
+        -:    0:Source:src/file_inclusion.c
+        -:    0:Graph:profiling/gc/file_inclusion.gcno
+        -:    0:Data:profiling/gc/file_inclusion.gcda
+        -:    0:Runs:1
+        -:    1:#include "file_inclusion.h"
+        -:    2:#include <stdio.h>
+        -:    3:#include <stdlib.h>
+        -:    4:#include "util.h"
+        -:    5:#include "definitions.h"
+        -:    6:#include "process_file.h"
+        -:    7:#include "globals.h"
+        -:    8:#include "string.h"
+        -:    9:#include <unistd.h> /* TODO: Not portable? Fuck Windows?*/
+        -:   10:/*
+        -:   11: *
+        -:   12: * Opens the file pointed to path_to_file. 
+        -:   13: * NOTE Must be complete path, and NOT relative.
+        -:   14: * E.g. /home/simont/macros/m.gtpp
+        -:   15: * Works like a stack frame, needs to save the current state for reseting. 
+        -:   16: */
+        3:   17:void include_file(const char* path_to_file, hash_table* macros)
+        -:   18:{
+        -:   19:    /* Old state */
+        3:   20:    long long old_ln;
+        3:   21:    char old_file_name[MAX_WORD_LENGTH - 1];
+        3:   22:    char old_path[MAX_LINE_LENGTH - 1];
+        -:   23:
+        -:   24:    /* Temp path */
+        3:   25:    char new_file_name[MAX_WORD_LENGTH];
+        3:   26:    char new_path[MAX_LINE_LENGTH];
+        -:   27:    /* Reading vars */
+        3:   28:    FILE* inc;
+        3:   29:    char line[MAX_LINE_LENGTH - 1];
+        -:   30:    
+        -:   31:    /* Save old state */
+        3:   32:    old_ln = line_number;
+        3:   33:    strcpy(old_file_name, current_file);
+        3:   34:    strcpy(old_path, current_path);
+        -:   35:    
+        -:   36:    /* Extract file and path to open */
+        3:   37:    extract_path_and_file(new_path, new_file_name, path_to_file);
+        -:   38:
+        -:   39:    /* Change path and globals */
+        3:   40:    chdir(new_path);
+        3:   41:    strcpy(current_path, new_path);
+        3:   42:    char tmp[MAX_LINE_LENGTH - 1];
+        3:   43:    getcwd(tmp, MAX_LINE_LENGTH - 1);
+        -:   44:
+        -:   45:    /* Try to open file and read it */
+        3:   46:    inc = fopen(new_file_name, "r");
+        3:   47:    if (!inc)
+    #####:   48:        formatted_uerror("Cannot open path to file %s\n", new_file_name);
+        -:   49:
+        3:   50:    strcpy(current_file, new_file_name);
+        3:   51:    strcpy(current_file, path_to_file);
+        3:   52:    line_number = 0;
+        -:   53:    /* Read file line by line */
+        8:   54:    while(1) {
+        -:   55:        /* Assume no line longer than MAX_LINE_LENGTH chars */
+        8:   56:        char* r = fgets(line,MAX_LINE_LENGTH - 1, inc);
+        8:   57:        if (r == NULL)
+        -:   58:            break;
+        5:   59:        ++line_number;
+        -:   60:        /* normal word write to output */
+        5:   61:        if (line[0] != RESERVED_MACRO_CHAR)
+    #####:   62:            continue;
+        5:   63:        add_macro(line, macros);
+        -:   64:    }
+        3:   65:    chdir(old_path);
+        3:   66:    strcpy(current_path, old_path);
+        3:   67:    strcpy(current_file, old_file_name);
+        3:   68:    line_number = old_ln;
+        3:   69:    fclose(inc);
+        3:   70:}

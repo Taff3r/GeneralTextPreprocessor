@@ -8,26 +8,6 @@
 #include "funcpointers.h"
 
 /*
- * Turns the line into sz number of tokens, depending on the delimeters.
- */
-char** tokenize(char* line, char* delimeters, size_t* sz)
-{
-   char** tokens;
-   char* token;
-   
-   tokens = xcalloc(MAX_LINE_LENGTH / MAX_WORD_LENGTH, \
-           sizeof(char*));
-   *sz = 0;
-   token = strtok(line, delimeters);
-   do {
-        tokens[*sz] = xcalloc(strlen(token) + 1, sizeof(char));
-        strcpy(tokens[*sz], token);
-        ++(*sz);
-   } while((token = strtok(NULL, " ")) != NULL); 
-   return tokens;
-}
-
-/*
  * Search the string str for the token and replaces it with the replacement.
  * Returns the a heap allocated string which has been modified. 
  */
@@ -121,6 +101,9 @@ void trim_leading_whitespace(char* str)
     free(orig_pos);
 }
 
+/*
+ * Reads a file and save it in a buffer to be used later.
+ */
 char* expand_file(FILE* file)
 {
     size_t length;
