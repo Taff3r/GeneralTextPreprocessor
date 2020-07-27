@@ -66,7 +66,7 @@ FOUR(TWO(Are,THREE(you,having,a)),THREE(good,day,today?),one,two)
 Will evaluate to:
 `Are you having a good day today? 1 2`
 
-### Example of usage (**NEW** See usage of IF)
+### Example of usage
 macros/personal.gtpp:
 ```
 $DEF SCHOOL Lunds Tekniska Högskola (LTH)
