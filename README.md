@@ -1,15 +1,17 @@
 # General Text Preprocessor
 A general text preprocessor allowing users to define macros in their text documents. Written entirly in C without the use of any others code, e.g. no external libraries, with the exception for the C-standard library.
 
-## Compilation
+## Compilation and Installation
 Clone the repo and run `make`.
+To install run `sudo make install`. This will simply move the `gtpp` executable to `/usr/local/bin/` so that `gtpp` is in your users path.
+
 ## Usage
 To use the program run `./gtpp <input-file> <output-file>`.
 The program can read and write to stdin/stdout. Allowing for piping between programs. E.g. :
 `cat some.file | ./gtpp > file.out`
 will read the output from `cat` process it, and then the output will be redirected into the file `file.out`.
 
-### Macro types (**NEW** see IF)
+### Macro types
 There are currently four different kinds of macros that can be defined.
 
 | **Type** | **Explanation**                                    |**Usage**                                              |
