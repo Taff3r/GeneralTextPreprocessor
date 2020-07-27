@@ -19,3 +19,5 @@ test:
 	gtpp test
 clean: 
 	rm -rf src/*.o $(PROGS) vgcore*
+install:
+	mv gtpp /usr/local/bin/
