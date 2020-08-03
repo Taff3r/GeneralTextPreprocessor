@@ -1,0 +1,14 @@
+$IFN HTML_GTPP
+$DEF HTML_GTPP                  
+$FUN IMG($src, $w, $h)          <img src=$src width="$w" heigth="$h">
+$FUN 'IMG($style, $src, $w, $h) <img class="$style" src=$src width="$w" heigth="$h">
+$FUN BTN($txt)                  <button type="button" $txt </button>
+$FUN 'BTN($style, $txt)         <button class="$style" type="button" $txt </button>
+$FUN _H1($txt)                  <h1>$txt</h1>
+$FUN _'H1($style, $txt)         <h1 class="$style">$txt</h1>
+$FUN _H2($txt)                  <h2>$txt</h2>
+$FUN _'H2($style, $txt)         <h2 class="$style">$txt</h2>
+$FUN _H3($txt)                  <h3>$txt</h3>
+$FUN _'H3($style, $txt)         <h3 class="$style">$txt</h3>
+$FUN _IT($txt)                  <i><p>$txt</p></i>
+$ENDIF
