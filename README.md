@@ -4,6 +4,8 @@ A general text preprocessor allowing users to define macros in their text docume
 ## Compilation and Installation
 Clone the repo and run `make`.
 To install run `sudo make install`. This will simply move the `gtpp` executable to `/usr/local/bin/` so that `gtpp` is in your users path.
+**(NEW)**
+Installing the (WIP) standard library is done by `make std`. This will place some files containing commonly used definitions in `/home/<USER_NAME>/std/`.
 
 ## Usage
 To use the program run `./gtpp <input-file> <output-file>`.
